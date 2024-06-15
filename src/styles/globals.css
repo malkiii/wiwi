@@ -78,4 +78,8 @@
   .heading {
     @apply text-balance font-bold tracking-tighter;
   }
+
+  image {
+    @apply block h-auto max-w-full;
+  }
 }

@@ -1,9 +1,9 @@
 export default {
   name: 'WiWi',
-  description: '.',
+  description:
+    'Fast and high quality real-time meetings, share your screen, and collaborate with your team.',
   author: {
     name: 'Malki Abderrahmane',
     url: 'https://malki.me',
   },
-  icon: '/favicon.ico',
 } as const;

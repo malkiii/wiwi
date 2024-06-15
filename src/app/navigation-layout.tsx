@@ -14,9 +14,9 @@ import {
 
 export function NavigationLayout({ children }: React.PropsWithChildren) {
   return (
-    <div className="flex min-h-dvh flex-col">
+    <div className="mx-auto flex min-h-dvh max-w-[1375px] flex-col">
       <Header />
-      <main className="relative mx-auto w-full max-w-7xl flex-grow">{children}</main>
+      {children}
       <Footer />
     </div>
   );
@@ -24,8 +24,8 @@ export function NavigationLayout({ children }: React.PropsWithChildren) {
 
 function Header() {
   return (
-    <header className="p-4">
-      <div className="mx-auto flex max-w-7xl justify-between">
+    <header className="p-4 pl-2">
+      <div className="mx-auto flex justify-between">
         <Logo type="logotype" />
         <nav className="flex items-center gap-4">
           <LanguageSwitcher />
@@ -56,10 +56,12 @@ function LanguageSwitcher() {
 
 function Footer() {
   return (
-    <footer className="text-balance p-4 pb-8 text-center text-sm">
-      &copy; {new Date().getFullYear()} By <Link href={site.author.url}>{site.author.name}</Link>,
-      All Rights Reserved | <Link href="/privacy">Privacy Policy</Link> |{' '}
-      <Link href="/terms">Terms of Service</Link>
+    <footer className="text-balance p-4 text-sm max-lg:text-center">
+      &copy; {new Date().getFullYear()} By{' '}
+      <Link href={site.author.url} className="underline">
+        {site.author.name}
+      </Link>
+      <span className="hidden lg:inline">, All Rights Reserved</span>
     </footer>
   );
 }
