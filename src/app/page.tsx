@@ -37,6 +37,7 @@ function MeetingDemo() {
   return (
     <div className="grid select-none grid-cols-2 grid-rows-2 gap-4 *:bg-muted lg:max-w-xl">
       <Image
+        priority
         src="/images/home/caller-2.png"
         width={1080}
         height={1080}
@@ -45,6 +46,7 @@ function MeetingDemo() {
       />
       <div className="flex aspect-square items-center justify-center self-end rounded-lg">
         <Image
+          priority
           src="/images/home/caller-3.png"
           width={360}
           height={360}
@@ -53,6 +55,7 @@ function MeetingDemo() {
         />
       </div>
       <Image
+        priority
         src="/images/home/caller-1.png"
         width={2160}
         height={1080}
