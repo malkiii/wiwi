@@ -4,12 +4,12 @@ import {
   integer,
   pgTableCreator,
   primaryKey,
-  serial,
   text,
   timestamp,
   varchar,
 } from 'drizzle-orm/pg-core';
 import { type AdapterAccount } from 'next-auth/adapters';
+import { createId } from '@paralleldrive/cuid2';
 
 /**
  * This is an example of how to use the multi-project schema feature of Drizzle ORM. Use the same
@@ -19,38 +19,46 @@ import { type AdapterAccount } from 'next-auth/adapters';
  */
 export const createTable = pgTableCreator(name => `wiwi_${name}`);
 
-export const posts = createTable(
-  'post',
-  {
-    id: serial('id').primaryKey(),
-    name: varchar('name', { length: 256 }),
-    createdById: varchar('createdById', { length: 255 })
-      .notNull()
-      .references(() => users.id),
-    createdAt: timestamp('created_at', { withTimezone: true })
-      .default(sql`CURRENT_TIMESTAMP`)
-      .notNull(),
-    updatedAt: timestamp('updatedAt', { withTimezone: true }),
-  },
-  example => ({
-    createdByIdIdx: index('createdById_idx').on(example.createdById),
-    nameIndex: index('name_idx').on(example.name),
-  }),
-);
-
 export const users = createTable('user', {
-  id: varchar('id', { length: 255 }).notNull().primaryKey(),
-  name: varchar('name', { length: 255 }),
-  email: varchar('email', { length: 255 }).notNull(),
+  id: varchar('id', { length: 255 })
+    .notNull()
+    .$defaultFn(() => createId())
+    .primaryKey(),
+  name: varchar('name', { length: 255 }).notNull(),
+  email: varchar('email', { length: 255 }).notNull().unique(),
   emailVerified: timestamp('emailVerified', {
     mode: 'date',
     withTimezone: true,
   }).default(sql`CURRENT_TIMESTAMP`),
+  password: varchar('password', { length: 512 }),
   image: varchar('image', { length: 255 }),
 });
 
+export const recentCalls = createTable(
+  'recent_call',
+  {
+    userId: varchar('userId', { length: 255 })
+      .notNull()
+      .references(() => users.id),
+    calledUserId: varchar('calledUserId', { length: 255 })
+      .notNull()
+      .references(() => users.id),
+    time: timestamp('time', {
+      mode: 'date',
+      withTimezone: true,
+    })
+      .default(sql`CURRENT_TIMESTAMP`)
+      .notNull(),
+  },
+  recentCall => ({
+    userIdIdx: index('recent_call_userId_idx').on(recentCall.userId),
+    calledUserIdIdx: index('recent_call_calledUserId_idx').on(recentCall.calledUserId),
+  }),
+);
+
 export const usersRelations = relations(users, ({ many }) => ({
   accounts: many(accounts),
+  recentCalls: many(recentCalls),
 }));
 
 export const accounts = createTable(
@@ -102,18 +110,3 @@ export const sessions = createTable(
 export const sessionsRelations = relations(sessions, ({ one }) => ({
   user: one(users, { fields: [sessions.userId], references: [users.id] }),
 }));
-
-export const verificationTokens = createTable(
-  'verificationToken',
-  {
-    identifier: varchar('identifier', { length: 255 }).notNull(),
-    token: varchar('token', { length: 255 }).notNull(),
-    expires: timestamp('expires', {
-      mode: 'date',
-      withTimezone: true,
-    }).notNull(),
-  },
-  vt => ({
-    compoundKey: primaryKey({ columns: [vt.identifier, vt.token] }),
-  }),
-);
