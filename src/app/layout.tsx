@@ -7,6 +7,7 @@ import { Toaster } from '~/components/ui/toaster';
 import site from '~/constants/site';
 
 const fontSans = FontSans({
+  display: 'swap',
   subsets: ['latin'],
   variable: '--font-sans',
   preload: true,
