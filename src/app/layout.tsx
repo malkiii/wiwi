@@ -1,8 +1,8 @@
 import '~/styles/globals.css';
 import type { Metadata } from 'next';
-// import { getServerAuthSession } from '~/server/auth';
+import { auth } from '~/server/auth';
 import { Inter as FontSans } from 'next/font/google';
-// import { SessionProvider } from '~/components/session-provider';
+import { SessionProvider } from './session-provider';
 import { Toaster } from '~/components/ui/toaster';
 import site from '~/constants/site';
 
@@ -14,7 +14,10 @@ const fontSans = FontSans({
 });
 
 export const metadata: Metadata = {
-  title: site.name,
+  title: {
+    default: site.name,
+    template: `%s | ${site.name}`,
+  },
   description: site.description,
   icons: [
     { rel: 'icon', sizes: '32x32', url: '/favicon-32x32.png' },
@@ -24,14 +27,12 @@ export const metadata: Metadata = {
 };
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
-  // const session = await getServerAuthSession();
+  const session = await auth();
 
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={fontSans.variable}>
-        {/* <SessionProvider user={session?.user}> */}
-        {children}
-        {/* </SessionProvider> */}
+        <SessionProvider user={session?.user}>{children}</SessionProvider>
         <Toaster />
       </body>
     </html>
