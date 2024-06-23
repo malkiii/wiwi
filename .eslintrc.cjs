@@ -7,6 +7,7 @@ const config = {
   'plugins': ['@typescript-eslint', 'drizzle'],
   'extends': ['next/core-web-vitals'],
   'rules': {
+    '@next/next/no-img-element': 'off',
     '@typescript-eslint/consistent-type-imports': [
       'warn',
       {
