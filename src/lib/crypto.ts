@@ -14,9 +14,9 @@ export function generateVerificationToken(
   payload: Record<string, any>,
   callback: jwt.SignCallback,
 ) {
-  return jwt.sign(payload, env.NEXTAUTH_SECRET, { expiresIn: '1d' }, callback);
+  return jwt.sign(payload, env.AUTH_SECRET, { expiresIn: '1d' }, callback);
 }
 
 export function verifyToken(token: string) {
-  return jwt.verify(token, env.NEXTAUTH_SECRET);
+  return jwt.verify(token, env.AUTH_SECRET);
 }
