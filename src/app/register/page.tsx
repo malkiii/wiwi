@@ -1,10 +1,10 @@
 import type { Metadata } from 'next';
-import { LoginForm } from './form';
+import { SignupForm } from './form';
 
 export const metadata: Metadata = {
-  title: 'Login',
+  title: 'Signup',
 };
 
 export default function Page() {
-  return <LoginForm />;
+  return <SignupForm />;
 }

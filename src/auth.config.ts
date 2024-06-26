@@ -27,6 +27,8 @@ export default {
   ],
   callbacks: {
     async signIn({ user, credentials }) {
+      if (!credentials) return true;
+
       const { password } = authCredentialsSchema.parse(credentials);
       const userPassword = (user as User).password!;
 

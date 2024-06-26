@@ -1,8 +1,9 @@
+'use client';
+
 import { default as NextLink } from 'next/link';
 import { Button } from '~/components/ui/button';
 import { Link } from '~/components/ui/link';
 import { Logo } from '~/components/logo';
-import site from '~/constants/site';
 
 import {
   Select,
@@ -11,6 +12,23 @@ import {
   SelectTrigger,
   SelectValue,
 } from '~/components/ui/select';
+
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '~/components/ui/dropdown-menu';
+
+import site from '~/constants/site';
+import { useSession } from './session-provider';
+import { UserAvatar } from '~/components/user-avatar';
+import { LogOutIcon } from '~/components/icons';
+import { signOut } from 'next-auth/react';
+import { useState } from 'react';
+import { cn } from '~/lib/utils';
 
 export function NavigationLayout({ children }: React.PropsWithChildren) {
   return (
@@ -29,9 +47,7 @@ function Header() {
         <Logo type="logotype" />
         <nav className="flex items-center gap-4">
           <LanguageSwitcher />
-          <Button asChild>
-            <NextLink href="/login">Login</NextLink>
-          </Button>
+          <UserNavigationMenu />
         </nav>
       </div>
     </header>
@@ -51,6 +67,49 @@ function LanguageSwitcher() {
         <SelectItem value="Arabic">العربية</SelectItem>
       </SelectContent>
     </Select>
+  );
+}
+
+function UserNavigationMenu() {
+  const { user } = useSession();
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
+
+  if (!user) {
+    return (
+      <Button asChild>
+        <NextLink href="/login">Login</NextLink>
+      </Button>
+    );
+  }
+
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger
+        className={cn('rounded-full', isLoggingOut && 'pointer-events-none opacity-70')}
+      >
+        <UserAvatar key={user.id} user={user} />
+      </DropdownMenuTrigger>
+      <DropdownMenuContent className="w-[170px]" align="end">
+        <DropdownMenuLabel>My Account</DropdownMenuLabel>
+        <DropdownMenuSeparator />
+        <DropdownMenuItem>Profile</DropdownMenuItem>
+        <DropdownMenuItem>Billing</DropdownMenuItem>
+        <DropdownMenuItem>Team</DropdownMenuItem>
+        <DropdownMenuItem>Subscription</DropdownMenuItem>
+        <DropdownMenuSeparator />
+        <DropdownMenuItem asChild>
+          <button
+            className="block w-full"
+            onClick={() => {
+              setIsLoggingOut(true);
+              signOut();
+            }}
+          >
+            <LogOutIcon className="mr-2 size-4" /> Log Out
+          </button>
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 }
 

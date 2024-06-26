@@ -1,10 +1,10 @@
 import { type NextRequest } from 'next/server';
-import { notFound } from 'next/navigation';
+import { notFound, redirect } from 'next/navigation';
 import { signIn } from '~/server/auth';
 
-import { userCredentialsSchema, type UserCredentials } from '~/lib/validation';
 import { createUser, getUser } from '~/server/db/user';
 import { getHashedPassword, verifyToken } from '~/lib/crypto';
+import { userCredentialsSchema, type UserCredentials } from '~/lib/validation';
 
 type Context = {
   params: { token: string };
@@ -35,7 +35,9 @@ async function signUp(credentials: UserCredentials) {
 
     await createUser({ ...credentials, password: hashedPassword });
 
-    return await signIn('credentials', { ...credentials, redirectTo: '/app' });
+    await signIn('credentials', { ...credentials, redirect: false });
+
+    return redirect('/app');
   } catch (error) {
     console.error(error);
     return Response.json({ error: 'Failed to create user!' }, { status: 500 });
