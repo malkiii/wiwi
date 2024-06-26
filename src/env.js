@@ -4,8 +4,8 @@ import { z } from 'zod';
 export const env = createEnv({
   server: {
     DATABASE_URL: z.string().url(),
-    NEXTAUTH_SECRET: z.string(),
-    NEXTAUTH_URL: z.string().url(),
+    AUTH_SECRET: z.string(),
+    AUTH_URL: z.string().url(),
     AUTH_GOOGLE_ID: z.string(),
     AUTH_GOOGLE_SECRET: z.string(),
     EMAIL_USER: z.string().email(),
@@ -20,8 +20,8 @@ export const env = createEnv({
   client: {},
   runtimeEnv: {
     DATABASE_URL: process.env.DATABASE_URL,
-    NEXTAUTH_SECRET: process.env.NEXTAUTH_SECRET,
-    NEXTAUTH_URL: process.env.NEXTAUTH_URL,
+    AUTH_SECRET: process.env.AUTH_SECRET,
+    AUTH_URL: process.env.AUTH_URL,
     AUTH_GOOGLE_ID: process.env.AUTH_GOOGLE_ID,
     AUTH_GOOGLE_SECRET: process.env.AUTH_GOOGLE_SECRET,
     EMAIL_PASSWORD: process.env.EMAIL_PASSWORD,
