@@ -27,41 +27,17 @@ export default function Page() {
             </Button>
           </div>
         </div>
-        <MeetingDemo />
+        <div className="w-full max-w-screen-sm select-none">
+          <Image
+            priority
+            src="/hero.svg"
+            width={547}
+            height={417}
+            className="w-full"
+            alt="Hero image"
+          />
+        </div>
       </main>
     </NavigationLayout>
-  );
-}
-
-function MeetingDemo() {
-  return (
-    <div className="grid select-none grid-cols-2 grid-rows-2 gap-4 *:bg-muted lg:max-w-xl">
-      <Image
-        priority
-        src="/images/home/caller-2.png"
-        width={1080}
-        height={1080}
-        className="self-end rounded-lg"
-        alt="Caller 2"
-      />
-      <div className="flex aspect-square items-center justify-center self-end rounded-lg">
-        <Image
-          priority
-          src="/images/home/caller-3.png"
-          width={360}
-          height={360}
-          className="aspect-square w-1/3 rounded-full"
-          alt="Caller 3"
-        />
-      </div>
-      <Image
-        priority
-        src="/images/home/caller-1.png"
-        width={2160}
-        height={1080}
-        className="col-span-2 w-full self-baseline rounded-lg"
-        alt="Caller 1"
-      />
-    </div>
   );
 }
