@@ -22,10 +22,18 @@ import {
   DropdownMenuTrigger,
 } from '~/components/ui/dropdown-menu';
 
+import {
+  VideoIcon,
+  SettingsIcon,
+  PrivacyIcon,
+  TermsIcon,
+  HelpIcon,
+  LogOutIcon,
+} from '~/components/icons';
+
 import site from '~/constants/site';
 import { useSession } from './session-provider';
 import { UserAvatar } from '~/components/user-avatar';
-import { LogOutIcon } from '~/components/icons';
 import { signOut } from 'next-auth/react';
 import { useState } from 'react';
 import { cn } from '~/lib/utils';
@@ -89,17 +97,38 @@ function UserNavigationMenu() {
       >
         <UserAvatar key={user.id} user={user} />
       </DropdownMenuTrigger>
-      <DropdownMenuContent className="w-[170px]" align="end">
+      <DropdownMenuContent className="w-[170px] *:w-full" align="end">
         <DropdownMenuLabel>My Account</DropdownMenuLabel>
         <DropdownMenuSeparator />
-        <DropdownMenuItem>Profile</DropdownMenuItem>
-        <DropdownMenuItem>Billing</DropdownMenuItem>
-        <DropdownMenuItem>Team</DropdownMenuItem>
-        <DropdownMenuItem>Subscription</DropdownMenuItem>
+        <DropdownMenuItem asChild>
+          <NextLink href="/app">
+            <VideoIcon className="mr-2 size-4" /> Meetings
+          </NextLink>
+        </DropdownMenuItem>
+        <DropdownMenuItem asChild>
+          <NextLink href="/app/settings">
+            <SettingsIcon className="mr-2 size-4" /> Settings
+          </NextLink>
+        </DropdownMenuItem>
+        <DropdownMenuSeparator />
+        <DropdownMenuItem asChild>
+          <NextLink href="/privacy">
+            <PrivacyIcon className="mr-2 size-4" /> Privacy Policy
+          </NextLink>
+        </DropdownMenuItem>
+        <DropdownMenuItem asChild>
+          <NextLink href="/terms">
+            <TermsIcon className="mr-2 size-4" /> Terms of Service
+          </NextLink>
+        </DropdownMenuItem>
+        <DropdownMenuItem asChild>
+          <NextLink href="/learn">
+            <HelpIcon className="mr-2 size-4" /> Help
+          </NextLink>
+        </DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem asChild>
           <button
-            className="block w-full"
             onClick={() => {
               setIsLoggingOut(true);
               signOut();

@@ -12,7 +12,7 @@ export default function Page() {
           <h1 className="mb-4 text-4xl md:text-6xl lg:mb-8 lg:text-balance">
             Start your video calls and meetings with WiWi
           </h1>
-          <p className="text-balance text-xl md:text-2xl">
+          <p className="text-balance text-xl md:text-2xl tracking-tight">
             Fast and high quality real-time meetings, share your screen, and collaborate with your
             team.
           </p>

@@ -1,4 +1,12 @@
-export { Video as VideoIcon, Loader2 as SpinnerIcon, LogOut as LogOutIcon } from 'lucide-react';
+export {
+  Video as VideoIcon,
+  Loader2 as SpinnerIcon,
+  Settings as SettingsIcon,
+  ShieldCheck as PrivacyIcon,
+  Handshake as TermsIcon,
+  CircleHelp as HelpIcon,
+  LogOut as LogOutIcon,
+} from 'lucide-react';
 
 type IconProps = React.SVGProps<SVGSVGElement>;
 
