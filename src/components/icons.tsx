@@ -6,6 +6,7 @@ export {
   Handshake as TermsIcon,
   CircleHelp as HelpIcon,
   LogOut as LogOutIcon,
+  Menu as MenuIcon,
 } from 'lucide-react';
 
 type IconProps = React.SVGProps<SVGSVGElement>;
