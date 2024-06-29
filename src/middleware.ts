@@ -15,7 +15,7 @@ export default middleware(request => {
     return NextResponse.redirect(new URL('/app', url.origin));
   }
 
-  if (!isAuthRoute && !isAuthenticated) {
+  if (!isHomePage && !isAuthRoute && !isAuthenticated) {
     return NextResponse.redirect(new URL('/login', url.origin));
   }
 });
