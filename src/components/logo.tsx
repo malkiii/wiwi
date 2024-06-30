@@ -8,7 +8,7 @@ type LogoProps = Omit<React.ComponentProps<typeof Link>, 'href'> & {
 export function Logo({ type, className, ...props }: LogoProps) {
   return (
     <Link
-      href="/"
+      href="/home"
       {...props}
       className={cn('group flex w-fit select-none items-center', className)}
     >

@@ -31,7 +31,7 @@ export function LogOutButton(props: ButtonProps) {
         </DialogHeader>
         <div className="flex justify-end gap-2">
           <DialogClose asChild>
-            <Button variant="outline" disabled={isLoggingOut}>
+            <Button variant="secondary" disabled={isLoggingOut}>
               Cancel
             </Button>
           </DialogClose>

@@ -7,6 +7,10 @@ export {
   CircleHelp as HelpIcon,
   LogOut as LogOutIcon,
   Menu as MenuIcon,
+  Plus as AddIcon,
+  Calendar as CalendarIcon,
+  History as TimeIcon,
+  CircleAlert as WarringIcon,
 } from 'lucide-react';
 
 type IconProps = React.SVGProps<SVGSVGElement>;
