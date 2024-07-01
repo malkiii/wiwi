@@ -34,16 +34,14 @@ export const users = createTable('user', {
   image: varchar('image', { length: 255 }),
 });
 
-export const recentCalls = createTable(
-  'recent_call',
+export const meetings = createTable(
+  'meeting',
   {
+    id: varchar('id', { length: 16 }).notNull().primaryKey(),
     userId: varchar('userId', { length: 255 })
       .notNull()
       .references(() => users.id),
-    calledUserId: varchar('calledUserId', { length: 255 })
-      .notNull()
-      .references(() => users.id),
-    time: timestamp('time', {
+    visitedAt: timestamp('time', {
       mode: 'date',
       withTimezone: true,
     })
@@ -52,13 +50,12 @@ export const recentCalls = createTable(
   },
   recentCall => ({
     userIdIdx: index('recent_call_userId_idx').on(recentCall.userId),
-    calledUserIdIdx: index('recent_call_calledUserId_idx').on(recentCall.calledUserId),
   }),
 );
 
 export const usersRelations = relations(users, ({ many }) => ({
   accounts: many(accounts),
-  recentCalls: many(recentCalls),
+  meetings: many(meetings),
 }));
 
 export const accounts = createTable(
