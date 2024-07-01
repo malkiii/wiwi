@@ -41,10 +41,10 @@ export function VerificationModal(props: VerificationModalProps) {
           </DialogDescription>
         </DialogHeader>
         <div className="flex justify-between gap-2">
-          <ResendEmailButton {...props} />
           <Button variant="secondary" className="w-fit" onClick={() => setIsClosed(true)}>
             Cancel
           </Button>
+          <ResendEmailButton {...props} />
         </div>
       </DialogContent>
     </Dialog>
@@ -56,8 +56,9 @@ function ResendEmailButton(props: VerificationModalProps) {
 
   return (
     <Button
-      loading={timeout.isActive}
       className="w-fit"
+      tabIndex={0}
+      loading={timeout.isActive}
       onClick={async () => {
         if (!props.formData) return;
 

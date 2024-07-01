@@ -34,9 +34,7 @@ import {
 import site from '~/constants/site';
 import { useSession } from './session-provider';
 import { UserAvatar } from '~/components/user-avatar';
-import { signOut } from 'next-auth/react';
-import { useState } from 'react';
-import { cn } from '~/lib/utils';
+import { LogOutButton } from '~/components/logout-button';
 
 export function NavigationLayout({ children }: React.PropsWithChildren) {
   return (
@@ -80,7 +78,6 @@ function LanguageSwitcher() {
 
 function UserNavigationMenu() {
   const { user } = useSession();
-  const [isLoggingOut, setIsLoggingOut] = useState(false);
 
   if (!user) {
     return (
@@ -92,55 +89,62 @@ function UserNavigationMenu() {
 
   return (
     <DropdownMenu>
-      <DropdownMenuTrigger
-        className={cn('rounded-full', isLoggingOut && 'pointer-events-none opacity-70')}
-      >
-        <UserAvatar key={user.id} user={user} />
+      <DropdownMenuTrigger className="rounded-full">
+        <UserAvatar />
       </DropdownMenuTrigger>
       <DropdownMenuContent className="w-[170px] *:w-full" align="end">
         <DropdownMenuLabel>My Account</DropdownMenuLabel>
         <DropdownMenuSeparator />
-        <DropdownMenuItem asChild>
-          <NextLink href="/app">
-            <VideoIcon className="mr-2 size-4" /> Meetings
-          </NextLink>
-        </DropdownMenuItem>
-        <DropdownMenuItem asChild>
-          <NextLink href="/app/settings">
-            <SettingsIcon className="mr-2 size-4" /> Settings
-          </NextLink>
-        </DropdownMenuItem>
+        {menuItems.map((item, index) =>
+          item ? (
+            <DropdownMenuItem key={item.pathname} asChild>
+              <NextLink href={item.pathname}>
+                <item.icon className="mr-2 size-4" /> {item.name}
+              </NextLink>
+            </DropdownMenuItem>
+          ) : (
+            <DropdownMenuSeparator key={'div-' + index} />
+          ),
+        )}
         <DropdownMenuSeparator />
         <DropdownMenuItem asChild>
-          <NextLink href="/privacy">
-            <PrivacyIcon className="mr-2 size-4" /> Privacy Policy
-          </NextLink>
-        </DropdownMenuItem>
-        <DropdownMenuItem asChild>
-          <NextLink href="/terms">
-            <TermsIcon className="mr-2 size-4" /> Terms of Service
-          </NextLink>
-        </DropdownMenuItem>
-        <DropdownMenuItem asChild>
-          <NextLink href="/learn">
-            <HelpIcon className="mr-2 size-4" /> Help
-          </NextLink>
-        </DropdownMenuItem>
-        <DropdownMenuSeparator />
-        <DropdownMenuItem asChild>
-          <button
-            onClick={() => {
-              setIsLoggingOut(true);
-              signOut();
-            }}
-          >
+          <LogOutButton className="w-full">
             <LogOutIcon className="mr-2 size-4" /> Log Out
-          </button>
+          </LogOutButton>
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
   );
 }
+
+const menuItems = [
+  {
+    name: 'Meetings',
+    pathname: '/app',
+    icon: VideoIcon,
+  },
+  {
+    name: 'Settings',
+    pathname: '/app/settings',
+    icon: SettingsIcon,
+  },
+  null,
+  {
+    name: 'Privacy Policy',
+    pathname: '/privacy',
+    icon: PrivacyIcon,
+  },
+  {
+    name: 'Terms of Service',
+    pathname: '/terms',
+    icon: TermsIcon,
+  },
+  {
+    name: 'Help',
+    pathname: '/help',
+    icon: HelpIcon,
+  },
+];
 
 function Footer() {
   return (
