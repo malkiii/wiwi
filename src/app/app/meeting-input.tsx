@@ -14,7 +14,7 @@ import {
 
 import { useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import { addNewMeeting } from './actions';
+import { addNewMeeting } from './action';
 
 export function MeetingInput() {
   const router = useRouter();
@@ -43,6 +43,7 @@ export function MeetingInput() {
       <Input
         type="text"
         placeholder="Enter a code or link"
+        onKeyDown={e => e.key === 'Enter' && joinMeeting()}
         onChange={e => {
           setError(undefined);
           setValue(e.target.value);
