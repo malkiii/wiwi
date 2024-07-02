@@ -18,6 +18,7 @@ import {
   MenuIcon,
 } from '~/components/icons';
 
+import { useState } from 'react';
 import { usePathname } from 'next/navigation';
 
 export function NavigationMenu() {
@@ -38,14 +39,23 @@ export function NavigationMenu() {
 }
 
 function HamburguerMenu() {
+  const [isNavigating, setIsNavigating] = useState(false);
+
   return (
-    <Sheet>
+    <Sheet open={isNavigating ? false : undefined}>
       <SheetTrigger asChild>
         <Button variant="outline" className="aspect-square h-10 px-0">
           <MenuIcon className="size-5" />
         </Button>
       </SheetTrigger>
-      <SheetContent side="left" className="w-full max-w-sm px-2 pt-12">
+      <SheetContent
+        side="left"
+        className="w-full max-w-sm px-2 pt-12"
+        onClick={(e: any) => {
+          const target = e.target as HTMLElement;
+          setIsNavigating(!!target.closest('a'));
+        }}
+      >
         <NavigationMenuItems />
       </SheetContent>
     </Sheet>
