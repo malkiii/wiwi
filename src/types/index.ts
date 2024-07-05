@@ -9,3 +9,8 @@ declare module 'next-auth/jwt' {
 }
 
 export type User = Session['user'];
+
+export type MeetingUser = {
+  info: User;
+  stream: MediaStream | null;
+};

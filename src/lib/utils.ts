@@ -15,3 +15,9 @@ export function getUserAvatarFallback(name: string) {
 
   return firstName.slice(0, 2).toUpperCase();
 }
+
+export function extractMeetingCode(str: string) {
+  const resolvedCode = str.match(/([\w\.-]+\/)?(\d{3}(-?)\d{3}\3\d{3}\s*$)/i)?.[2];
+
+  return resolvedCode?.replace(/(\d{3})(\d{3})(\d{3})/i, '$1-$2-$3');
+}
