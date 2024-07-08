@@ -1,23 +1,20 @@
 'use client';
 
-import { useSession } from '~/app/session-provider';
 import { getUserAvatarFallback } from '~/lib/utils';
+import type { User } from '~/types';
 import { cn } from '~/lib/utils';
 
 type AvatarProps = React.ComponentProps<'div'> & {
+  user: User;
   size?: number;
 };
 
-export function UserAvatar({ size = 40, className, ...props }: AvatarProps) {
-  const { user } = useSession();
-
-  if (!user) return null;
-
+export function UserAvatar({ user, size = 40, className, ...props }: AvatarProps) {
   return (
     <div
       {...props}
       className={cn(
-        'relative aspect-square size-10 select-none overflow-hidden rounded-[50%]',
+        'pointer-events-none relative aspect-square w-10 select-none overflow-hidden rounded-[50%]',
         className,
       )}
     >
@@ -26,12 +23,12 @@ export function UserAvatar({ size = 40, className, ...props }: AvatarProps) {
           width={size}
           height={size}
           referrerPolicy="no-referrer"
-          className="absolute inset-0 z-10"
+          className="absolute inset-0 z-10 italic"
           src={getOriginalAvatar(user.image)}
           alt={user.name}
         />
       )}
-      <span className="absolute inset-0 flex items-center justify-center bg-muted font-normal">
+      <span className="absolute inset-0 flex items-center justify-center bg-foreground/10 font-normal">
         {getUserAvatarFallback(user.name)}
       </span>
     </div>

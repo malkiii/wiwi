@@ -21,3 +21,10 @@ export function extractMeetingCode(str: string) {
 
   return resolvedCode?.replace(/(\d{3})(\d{3})(\d{3})/i, '$1-$2-$3');
 }
+
+export function getMediaTracks(stream: MediaStream | null) {
+  return {
+    video: stream?.getVideoTracks()[0],
+    audio: stream?.getAudioTracks()[0],
+  };
+}

@@ -2,11 +2,13 @@
 
 import {
   Dialog,
+  DialogTrigger,
   DialogContent,
   DialogDescription,
   DialogHeader,
   DialogTitle,
   DialogFooter,
+  DialogClose,
 } from '~/components/ui/dialog';
 import { Label } from '~/components/ui/label';
 import { Input } from '~/components/ui/input';
@@ -15,6 +17,7 @@ import { Button } from '~/components/ui/button';
 import { CopyIcon, CheckIcon } from './icons';
 
 import { useClipboard } from 'react-pre-hooks';
+import { useSession } from './session-provider';
 
 type ShareMeetingProps = React.ComponentProps<typeof Dialog> & {
   code?: string;
@@ -22,16 +25,24 @@ type ShareMeetingProps = React.ComponentProps<typeof Dialog> & {
   onClose?: () => any;
 };
 
-export function ShareMeeting({ code, description, onClose, ...props }: ShareMeetingProps) {
+export function ShareMeeting({
+  code,
+  description,
+  onClose,
+  children,
+  ...props
+}: ShareMeetingProps) {
   const clipboard = useClipboard();
+  const userName = useSession().user!.name;
 
-  const link = code ? `${window.location.host}/${code}` : '';
+  const getLink = () => `${window.location.host}${code ? `/${code}` : window.location.pathname}`;
   const Icon = clipboard.isCopied ? CheckIcon : CopyIcon;
 
   return (
-    <Dialog {...props} open={!!code}>
+    <Dialog {...props} open={children ? undefined : !!code}>
+      {children && <DialogTrigger asChild>{children}</DialogTrigger>}
       <DialogContent className="sm:max-w-md">
-        <DialogHeader>
+        <DialogHeader className="text-left">
           <DialogTitle>Share link</DialogTitle>
           <DialogDescription>{description}</DialogDescription>
         </DialogHeader>
@@ -40,16 +51,36 @@ export function ShareMeeting({ code, description, onClose, ...props }: ShareMeet
             <Label htmlFor="link" className="sr-only">
               Link
             </Label>
-            <Input id="link" value={link} readOnly />
+            <Input id="link" value={getLink()} readOnly />
           </div>
-          <Button type="submit" size="sm" className="px-3" onClick={() => clipboard.copy(link)}>
+          <Button
+            type="submit"
+            size="sm"
+            className="px-3"
+            onClick={() => clipboard.copy(getLink())}
+          >
             <Icon className="size-4" />
           </Button>
         </div>
-        <DialogFooter className="sm:justify-start">
-          <Button type="button" variant="secondary" onClick={onClose}>
-            Close
+        <DialogFooter className="gap-2 sm:justify-start">
+          <Button
+            type="button"
+            disabled={!navigator.share}
+            onClick={() => {
+              navigator.share?.({
+                title: 'WiWi',
+                text: `${userName} invites you to a meeting.`,
+                url: `https://${getLink()}`,
+              });
+            }}
+          >
+            Share
           </Button>
+          <DialogClose asChild>
+            <Button type="button" variant="secondary" onClick={onClose}>
+              Cancel
+            </Button>
+          </DialogClose>
         </DialogFooter>
       </DialogContent>
     </Dialog>
