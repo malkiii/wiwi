@@ -75,8 +75,8 @@ dependencies:
     specifier: ^7.51.5
     version: 7.51.5(react@18.3.1)
   react-pre-hooks:
-    specifier: ^3.0.4
-    version: 3.0.4(react-dom@18.3.1)(react@18.3.1)
+    specifier: ^3.0.6
+    version: 3.0.6(react-dom@18.3.1)(react@18.3.1)
   tailwind-merge:
     specifier: ^2.3.0
     version: 2.3.0
@@ -4406,8 +4406,8 @@ packages:
     resolution: {integrity: sha512-24e6ynE2H+OKt4kqsOvNd8kBpV65zoxbA4BVsEOB3ARVWQki/DHzaUoC5KuON/BiccDaCCTZBuOcfZs70kR8bQ==}
     dev: true
 
-  /react-pre-hooks@3.0.4(react-dom@18.3.1)(react@18.3.1):
-    resolution: {integrity: sha512-Iiw4Ky5/B8Riyn8v7MIxA1tA9MF2S+gUYcH4V2S6pz1nu3gv/QxTKwMLAFG4TB2ARXKeILnjZDm5D9RY3tN44Q==}
+  /react-pre-hooks@3.0.6(react-dom@18.3.1)(react@18.3.1):
+    resolution: {integrity: sha512-M3kWmR6ew156dU6otIP1QdAjU2bpA0D6ueA4dE59CDy/uf/0VCohZYg4dNPI0ZZn3Gpv0VW0QHOFrltau+/Sqg==}
     peerDependencies:
       react: '>=18.2.0'
       react-dom: '>=18.2.0'
