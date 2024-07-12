@@ -32,30 +32,14 @@ export const users = createTable('user', {
   }).default(sql`CURRENT_TIMESTAMP`),
   password: varchar('password', { length: 512 }),
   image: varchar('image', { length: 255 }),
+  roomCode: varchar('roomCode', { length: 16 })
+    .notNull()
+    .$defaultFn(() => generateRoomCode())
+    .unique(),
 });
-
-export const meetings = createTable(
-  'meeting',
-  {
-    id: varchar('id', { length: 16 }).notNull().primaryKey(),
-    userId: varchar('userId', { length: 255 })
-      .notNull()
-      .references(() => users.id),
-    visitedAt: timestamp('time', {
-      mode: 'date',
-      withTimezone: true,
-    })
-      .default(sql`CURRENT_TIMESTAMP`)
-      .notNull(),
-  },
-  recentCall => ({
-    userIdIdx: index('recent_call_userId_idx').on(recentCall.userId),
-  }),
-);
 
 export const usersRelations = relations(users, ({ many }) => ({
   accounts: many(accounts),
-  meetings: many(meetings),
 }));
 
 export const accounts = createTable(
@@ -107,3 +91,8 @@ export const sessions = createTable(
 export const sessionsRelations = relations(sessions, ({ one }) => ({
   user: one(users, { fields: [sessions.userId], references: [users.id] }),
 }));
+
+function generateRoomCode(): string {
+  const num = Math.random().toString();
+  return `${num.slice(2, 5)}-${num.slice(5, 8)}-${num.slice(8, 11)}`;
+}
