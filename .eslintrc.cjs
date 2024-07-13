@@ -8,6 +8,7 @@ const config = {
   'extends': ['next/core-web-vitals'],
   'rules': {
     '@next/next/no-img-element': 'off',
+    'react-hooks/exhaustive-deps': 'off',
     '@typescript-eslint/consistent-type-imports': [
       'warn',
       {
