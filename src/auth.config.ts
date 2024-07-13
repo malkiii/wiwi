@@ -39,8 +39,6 @@ export default {
 
       const dbUser = (await getUser(user.email!)) ?? token.user;
 
-      if (dbUser) console.log('User found:', dbUser.id);
-
       return { ...token, user: dbUser ?? token.user };
     },
     session: async ({ token, session }) => {
