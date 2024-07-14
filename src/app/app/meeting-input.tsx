@@ -1,30 +1,28 @@
 'use client';
 
-import { Input } from '~/components/ui/input';
-import { VideoIcon, AddIcon, TimeIcon, WarringIcon } from '~/components/icons';
-import { Button, type ButtonProps } from '~/components/ui/button';
-import { ShareMeeting } from '~/components/share-meeting';
-
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '~/components/ui/dropdown-menu';
-
+import Link from 'next/link';
 import { useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import { addNewMeeting } from './action';
+import { extractMeetingCode } from '~/lib/utils';
+import { useSession } from '~/components/session-provider';
+
+import { Input } from '~/components/ui/input';
+import { Button } from '~/components/ui/button';
+import { UserAvatar } from '~/components/user-avatar';
+import { ShareMeeting } from '~/components/share-meeting';
+import { VideoIcon, WarningIcon, ShareIcon } from '~/components/icons';
 
 export function MeetingInput() {
   const router = useRouter();
+  const { roomCode } = useSession().user!;
+
   const [isNavigating, setIsNavigating] = useState(false);
 
   const [value, setValue] = useState('');
   const [error, setError] = useState<string>();
 
   const joinMeeting = useCallback(() => {
-    const code = value.match(/([\w\.-]+\/)?(\d{3}(-?)\d{3}\3\d{3}\s*$)/i)?.[2];
+    const code = extractMeetingCode(value);
 
     if (!code) {
       const isLink = value.startsWith(window.location.origin);
@@ -33,82 +31,66 @@ export function MeetingInput() {
 
     setIsNavigating(true);
 
-    const resolvedCode = code.replace(/(\d{3})(\d{3})(\d{3})/i, '$1-$2-$3');
-
-    router.push(`/${resolvedCode}`);
+    router.push(`/${code}`);
   }, [value]);
 
   return (
     <div className="grid gap-2">
-      <Input
-        type="text"
-        placeholder="Enter a code or link"
-        onKeyDown={e => e.key === 'Enter' && joinMeeting()}
-        onChange={e => {
-          setError(undefined);
-          setValue(e.target.value);
-        }}
-      />
-      {error && (
-        <p role="alert" className="flex items-center gap-1 text-sm text-destructive">
-          <WarringIcon className="size-4" /> {error}
-        </p>
-      )}
       <div className="flex gap-2">
-        <NewMeetingButton disabled={isNavigating} className="flex-1" />
-        <Button variant="secondary" disabled={!value || isNavigating} onClick={joinMeeting}>
+        <Input
+          type="text"
+          id="meeting-code"
+          className="flex-1"
+          placeholder="Enter a code or link"
+          onKeyDown={e => e.key === 'Enter' && joinMeeting()}
+          onChange={e => {
+            setError(undefined);
+            setValue(e.target.value);
+          }}
+        />
+        <Button
+          variant="secondary"
+          className="px-4"
+          disabled={!value || isNavigating}
+          onClick={joinMeeting}
+        >
           Join
         </Button>
       </div>
+      {error && (
+        <p role="alert" className="flex items-center gap-1 text-sm text-destructive">
+          <WarningIcon className="size-4" /> {error}
+        </p>
+      )}
+      <Button onClick={() => setIsNavigating(true)} asChild>
+        <Link
+          href={`/${roomCode}`}
+          className={isNavigating ? 'pointer-events-none opacity-50' : ''}
+        >
+          <VideoIcon className="mr-2 size-5" /> New meeting
+        </Link>
+      </Button>
+      <ShareMeeting code={roomCode}>
+        <Button variant="outline" disabled={isNavigating}>
+          <ShareIcon className="mr-2 size-5" /> Share your room link
+        </Button>
+      </ShareMeeting>
     </div>
   );
 }
 
-function NewMeetingButton(props: ButtonProps) {
-  const router = useRouter();
+export function MeetingInputLabel() {
+  const { user } = useSession();
 
-  const [code, setCode] = useState<string>();
-  const [isLoading, setIsLoading] = useState(false);
-
-  const startNewMeeting = useCallback(async () => {
-    setIsLoading(true);
-    const code = await addNewMeeting();
-
-    router.push(`/${code}`);
-  }, []);
-
-  const createFutureMeeting = useCallback(async () => {
-    setIsLoading(true);
-    setCode(await addNewMeeting());
-    setIsLoading(false);
-  }, []);
+  if (!user) return null;
 
   return (
-    <>
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <Button {...props} loading={isLoading} disabled={props.disabled || isLoading}>
-            <VideoIcon className="mr-2 size-5" /> New meeting
-          </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent className="w-full" align="start">
-          <DropdownMenuItem asChild>
-            <button className="w-full" onClick={startNewMeeting}>
-              <AddIcon className="mr-3 size-5" /> Start a new meeting
-            </button>
-          </DropdownMenuItem>
-          <DropdownMenuItem asChild>
-            <button className="w-full" onClick={createFutureMeeting}>
-              <TimeIcon className="mr-3 size-5 text-accent-foreground" /> Create a meeting for later
-            </button>
-          </DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
-      <ShareMeeting
-        code={code}
-        description="you can share this link."
-        onClose={() => setCode(undefined)}
+    <label htmlFor="meeting-code" className="mx-auto block w-fit">
+      <UserAvatar
+        user={user}
+        size={240}
+        className="mx-auto size-[180px] text-2xl max-md:size-[120px]"
       />
-    </>
+    </label>
   );
 }

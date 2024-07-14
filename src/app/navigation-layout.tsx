@@ -32,7 +32,7 @@ import {
 } from '~/components/icons';
 
 import site from '~/constants/site';
-import { useSession } from './session-provider';
+import { useSession } from '~/components/session-provider';
 import { UserAvatar } from '~/components/user-avatar';
 import { LogOutButton } from '~/components/logout-button';
 
@@ -90,7 +90,7 @@ function UserNavigationMenu() {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger className="rounded-full">
-        <UserAvatar />
+        <UserAvatar user={user} />
       </DropdownMenuTrigger>
       <DropdownMenuContent className="w-[170px] *:w-full" align="end">
         <DropdownMenuLabel>My Account</DropdownMenuLabel>

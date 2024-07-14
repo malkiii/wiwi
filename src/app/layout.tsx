@@ -2,7 +2,7 @@ import '~/styles/globals.css';
 import type { Metadata } from 'next';
 import { auth } from '~/server/auth';
 import { Inter as FontSans } from 'next/font/google';
-import { SessionProvider } from './session-provider';
+import { SessionProvider } from '~/components/session-provider';
 import site from '~/constants/site';
 
 const fontSans = FontSans({
