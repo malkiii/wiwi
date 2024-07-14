@@ -1,3 +1,5 @@
+export type IconProps = React.SVGProps<SVGSVGElement>;
+
 export {
   Video as VideoIcon,
   Loader2 as SpinnerIcon,
@@ -10,7 +12,7 @@ export {
   Plus as AddIcon,
   Calendar as CalendarIcon,
   History as TimeIcon,
-  CircleAlert as WarringIcon,
+  CircleAlert as WarningIcon,
   Copy as CopyIcon,
   Check as CheckIcon,
   MicOff as MicOffIcon,
@@ -25,9 +27,10 @@ export {
   Maximize as MaximizeIcon,
   Minimize as MinimizeIcon,
   Home as HomeIcon,
+  Share2 as ShareIcon,
+  MessagesSquare as ChatIcon,
+  Users as UsersIcon,
 } from 'lucide-react';
-
-type IconProps = React.SVGProps<SVGSVGElement>;
 
 // prettier-ignore
 export const HangUpIcon = (props: IconProps) => (

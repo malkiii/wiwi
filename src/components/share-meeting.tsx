@@ -35,7 +35,10 @@ export function ShareMeeting({
   const clipboard = useClipboard();
   const userName = useSession().user!.name;
 
-  const getLink = () => `${window.location.host}${code ? `/${code}` : window.location.pathname}`;
+  const getLink = () => {
+    if (typeof window === 'undefined') return '';
+    return `${window.location.host}${code ? `/${code}` : window.location.pathname}`;
+  };
   const Icon = clipboard.isCopied ? CheckIcon : CopyIcon;
 
   return (
@@ -62,10 +65,10 @@ export function ShareMeeting({
             <Icon className="size-4" />
           </Button>
         </div>
-        <DialogFooter className="gap-2 sm:justify-start">
+        <DialogFooter className="gap-y-2 sm:justify-between">
           <Button
             type="button"
-            disabled={!navigator.share}
+            disabled={typeof window === 'undefined' || !navigator.share}
             onClick={() => {
               navigator.share?.({
                 title: 'WiWi',
