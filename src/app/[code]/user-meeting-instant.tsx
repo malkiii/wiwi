@@ -6,13 +6,22 @@ import { UserAvatar } from '~/components/user-avatar';
 import { useAudioAnalyser } from 'react-pre-hooks';
 import { MicOffIcon } from '~/components/icons';
 import { cn, getMediaTracks } from '~/lib/utils';
+import { useMeetingRoom } from './meeting-room-provider';
 
-type UserMeetingInstantProps = React.ComponentPropsWithoutRef<'div'> & MeetingUser;
+type UserMeetingInstantProps = React.ComponentPropsWithoutRef<'video'> & MeetingUser;
 
-export function UserMeetingInstant({ info, stream, className, ...props }: UserMeetingInstantProps) {
+export function UserMeetingInstant({
+  presenceKey,
+  info,
+  stream,
+  className,
+  ...props
+}: UserMeetingInstantProps) {
   const userVideoRef = React.useRef<HTMLVideoElement>(null);
   const canvasRef = React.useRef<HTMLCanvasElement>(null);
   const streamRef = React.useRef(stream);
+
+  const isMuted = useMeetingRoom().room.presenceKey.current === presenceKey;
 
   const getCurrentState = React.useCallback(
     (kind: keyof ReturnType<typeof getMediaTracks>) => {
@@ -82,7 +91,6 @@ export function UserMeetingInstant({ info, stream, className, ...props }: UserMe
 
   return (
     <div
-      {...props}
       className={cn(
         'relative flex aspect-[3/2] items-center justify-center overflow-hidden rounded-lg bg-muted',
         className,
@@ -98,8 +106,9 @@ export function UserMeetingInstant({ info, stream, className, ...props }: UserMe
       )}
       <UserAvatar user={info} size={240} className="z-10 aspect-square w-1/3 text-xl" />
       <video
+        {...props}
         ref={userVideoRef}
-        muted
+        muted={isMuted}
         autoPlay
         playsInline
         className={cn(

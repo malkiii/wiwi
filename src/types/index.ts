@@ -12,7 +12,11 @@ declare module 'next-auth/jwt' {
 
 export type User = Session['user'];
 
-export type MeetingUser = { info: User; stream: MediaStream | null };
+export type MeetingUser = {
+  info: User;
+  presenceKey: string;
+  stream: MediaStream | null;
+};
 
 export type PresenceState = RealtimePresenceState<{ user: User }>;
 
@@ -27,13 +31,24 @@ export type JoinResponsePayload = Payload<{
   status: 'ACCEPTED' | 'REJECTED';
 }>;
 
+export type ConnectionSignal = {
+  withStream: boolean;
+  data: Peer.SignalData;
+};
+
+export type RequestSignals = Record<string, ConnectionSignal>;
+
 export type ConnectionRequestPayload = Payload<{
   key: string;
-  signals: Record<string, Peer.SignalData>;
+  signals: RequestSignals;
 }>;
 
 export type ConnectionResponsePayload = Payload<{
   key: string;
-  user: User;
-  signal: Peer.SignalData;
+  callerKey: string;
+  signal: ConnectionSignal;
 }>;
+
+export type PeerDataPayload = {
+  state: { video?: boolean; audio?: boolean };
+};

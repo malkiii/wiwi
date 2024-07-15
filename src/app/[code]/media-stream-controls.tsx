@@ -36,9 +36,12 @@ type MeiaStateToggleProps = ButtonProps & {
 };
 
 export function MeiaStateToggle({ kind, className, ...props }: MeiaStateToggleProps) {
-  const { userMedia } = useMeetingRoom();
+  const { userMedia, room } = useMeetingRoom();
 
-  const getCurrentState = React.useCallback(() => getMediaTracks(userMedia.stream)[kind]?.enabled, [userMedia.stream]);
+  const getCurrentState = React.useCallback(
+    () => getMediaTracks(userMedia.stream)[kind]?.enabled,
+    [userMedia.stream],
+  );
 
   const isEnabled = getCurrentState();
   const hasPermission = isEnabled !== undefined;
@@ -65,6 +68,8 @@ export function MeiaStateToggle({ kind, className, ...props }: MeiaStateTogglePr
         if (!track) return;
 
         track.enabled = !track.enabled;
+        room.sendPeerData({ state: { [kind]: track.enabled } });
+
         rerender();
       }}
     >

@@ -72,7 +72,11 @@ function GettingReady() {
           <JoinIcon className="mr-2 size-5" /> Join meeting
         </Button>
       </div>
-      <UserMeetingInstant info={user!} stream={userMedia.stream} />
+      <UserMeetingInstant
+        presenceKey={room.presenceKey.current}
+        info={user!}
+        stream={userMedia.stream}
+      />
       <div className="flex w-full items-center justify-between">
         <div className="flex w-fit gap-4">
           <MeiaStateToggle kind="audio" />
@@ -92,9 +96,19 @@ function Room() {
     <div className="flex size-full w-full flex-col">
       <div className="flex flex-1 items-center justify-center px-10">
         <div className="flex flex-wrap justify-center gap-2 transition-all duration-200 *:w-[calc(100vw-2*theme(padding.12))] *:max-w-md">
-          <UserMeetingInstant key={currentUser.id} info={currentUser} stream={userMedia.stream} />
+          <UserMeetingInstant
+            key={currentUser.id}
+            presenceKey={room.presenceKey.current}
+            info={currentUser}
+            stream={userMedia.stream}
+          />
           {room.joinedUsers.map(user => (
-            <UserMeetingInstant key={user.info.id} info={user.info} stream={user.stream} />
+            <UserMeetingInstant
+              key={user.info.id}
+              presenceKey={user.presenceKey}
+              info={user.info}
+              stream={user.stream}
+            />
           ))}
         </div>
       </div>

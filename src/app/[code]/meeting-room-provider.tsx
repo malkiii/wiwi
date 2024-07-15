@@ -4,7 +4,7 @@ import React from 'react';
 import { useArray, useMediaDevices } from 'react-pre-hooks';
 import type { RealtimeChannel } from '@supabase/supabase-js';
 import { client, broadcastEvents } from '~/lib/supabase';
-import Peer from 'simple-peer';
+import type Peer from 'simple-peer';
 
 import { useSession } from '~/components/session-provider';
 import type {
@@ -14,7 +14,11 @@ import type {
   JoinResponsePayload,
   ConnectionRequestPayload,
   ConnectionResponsePayload,
+  RequestSignals,
+  PeerDataPayload,
+  ConnectionSignal,
 } from '~/types';
+import { createPeerInstance } from '~/lib/utils';
 
 type MeetingRoomContextData = {
   code: string;
@@ -33,7 +37,10 @@ export function MeetingRoomProvider({ code, children }: MeetingRoomProviderProps
   const media = useMediaDevices();
   const [state, setState] = React.useState<MeetingRoomContextData['state']>();
 
-  const constraintsRef = React.useRef<MediaStreamConstraints>({ audio: true, video: true });
+  const constraintsRef = React.useRef<MediaStreamConstraints>({
+    video: { facingMode: 'user' },
+    audio: { noiseSuppression: true, echoCancellation: false },
+  });
   const firstMount = React.useRef(true);
 
   const room = useRoomChannel(code, media.stream, setState);
@@ -41,17 +48,18 @@ export function MeetingRoomProvider({ code, children }: MeetingRoomProviderProps
   React.useEffect(() => {
     if (firstMount.current) {
       firstMount.current = false;
+      const { video, audio } = constraintsRef.current;
 
       (async () => {
         try {
           await media.start(constraintsRef.current);
         } catch {
           try {
-            constraintsRef.current = { audio: true };
+            constraintsRef.current = { audio };
             await media.start(constraintsRef.current);
           } catch {
             try {
-              constraintsRef.current = { video: true };
+              constraintsRef.current = { video };
               await media.start(constraintsRef.current);
             } catch (error) {
               console.warn(error);
@@ -99,6 +107,8 @@ function useRoomChannel(
   const waitingUsers = useArray<MeetingUser>();
 
   const channelRef = React.useRef<RealtimeChannel>();
+  const peersRef = React.useRef<Record<string, Peer.Instance>>({});
+  const hasJoined = React.useRef(false);
   const presenceKey = React.useRef('');
 
   const roomHost = React.useMemo(
@@ -126,6 +136,7 @@ function useRoomChannel(
   const leaveChannel = React.useCallback(() => {
     if (!presenceKey.current || !channelRef.current) return;
 
+    stream?.getAudioTracks().forEach(track => track.stop());
     client.removeChannel(channelRef.current);
     presenceKey.current = '';
   }, [stream]);
@@ -150,50 +161,102 @@ function useRoomChannel(
       const newUser: User = newPresences[0]!.user;
     });
 
-    channelRef.current.on('presence', { event: 'leave' }, ({ leftPresences }) => {
-      const key: string = leftPresences[0]!.user.id;
-
+    channelRef.current.on('presence', { event: 'leave' }, ({ key }) => {
       let userIndex = -1;
       joinedUsers.reset(arr => {
-        userIndex = arr.findIndex(({ info }) => info.id === key);
+        userIndex = arr.findIndex(({ presenceKey }) => presenceKey === key);
         return arr;
       });
 
-      if (userIndex !== -1) joinedUsers.pop(userIndex);
+      if (userIndex === -1) return;
 
-      console.log('leave:', { key, leftPresences });
+      joinedUsers.pop(userIndex);
+
+      peersRef.current[key]?.destroy();
+      delete peersRef.current[key];
     });
 
     channelRef.current.on(
       'broadcast',
       { event: broadcastEvents.JOIN_RESPONSE },
-      ({ payload }: JoinResponsePayload) => {
+      async ({ payload }: JoinResponsePayload) => {
         if (!payload) return;
         if (payload.key !== presenceKey.current) return;
 
+        if (payload.status === 'REJECTED') {
+          return updateUserState('rejected');
+        }
+
+        console.log({ event: 'JOIN_RESPONSE', payload });
+
         updateUserState('joined');
+        hasJoined.current = true;
 
-        console.log(streamRef.current);
+        const signals = await createPeers();
 
-        console.log('join:', { user, status: payload.status });
+        channelRef.current!.send({
+          type: 'broadcast',
+          event: broadcastEvents.CONNECTION_REQUEST,
+          payload: {
+            key: presenceKey.current,
+            signals,
+          } satisfies ConnectionRequestPayload['payload'],
+        });
+      },
+    );
+
+    channelRef.current.on(
+      'broadcast',
+      { event: broadcastEvents.CONNECTION_REQUEST },
+      ({ payload }: ConnectionRequestPayload) => {
+        if (!payload || !hasJoined.current) return;
+        if (payload.key === presenceKey.current) return;
+
+        console.log({ event: 'CONNECTION_REQUEST', payload });
+
+        const singal = payload.signals[presenceKey.current];
+        if (!singal) return;
+
+        const peer = createPeerInstance(streamRef.current);
+
+        peer.on('signal', signal => {
+          channelRef.current!.send({
+            type: 'broadcast',
+            event: broadcastEvents.CONNECTION_RESPONSE,
+            payload: {
+              key: presenceKey.current,
+              callerKey: payload.key,
+              signal: { withStream: !!streamRef.current, data: signal },
+            } satisfies ConnectionResponsePayload['payload'],
+          });
+        });
+
+        addPeerEvents(payload.key, peer, singal);
+
+        peer.signal(singal.data);
+        peersRef.current[payload.key] = peer;
       },
     );
 
     channelRef.current.on(
       'broadcast',
       { event: broadcastEvents.CONNECTION_RESPONSE },
-      (payload: ConnectionRequestPayload) => {},
-    );
+      ({ payload }: ConnectionResponsePayload) => {
+        if (!payload) return;
+        if (payload.callerKey !== presenceKey.current) return;
 
-    channelRef.current.on(
-      'broadcast',
-      { event: broadcastEvents.CONNECTION_RESPONSE },
-      (payload: ConnectionResponsePayload) => {},
+        console.log({ event: 'CONNECTION_RESPONSE', payload });
+
+        const peer = peersRef.current[payload.key];
+        if (!peer) return;
+
+        addPeerEvents(payload.key, peer, payload.signal);
+
+        peer.signal(payload.signal.data);
+      },
     );
 
     channelRef.current.subscribe(async status => {
-      console.log('status:', status);
-
       if (status !== 'SUBSCRIBED') return;
 
       updateUserState('ready');
@@ -202,8 +265,90 @@ function useRoomChannel(
     });
   }, [user]);
 
-  const streamRef = React.useRef(stream);
+  const createPeers = React.useCallback(
+    () =>
+      new Promise<RequestSignals>(resolve => {
+        if (!channelRef.current) return;
 
+        const presenceState = getPresenceState();
+        let discount = Object.keys(presenceState).length - 1;
+
+        if (discount === 0) return resolve({});
+
+        const signals: RequestSignals = {};
+
+        for (const key in presenceState) {
+          if (presenceKey.current === key) continue;
+
+          const peer = createPeerInstance(streamRef.current, true);
+
+          peer.on('signal', signal => {
+            signals[key] = { withStream: !!streamRef.current, data: signal };
+            discount--;
+
+            if (discount === 0) resolve(signals);
+          });
+
+          peersRef.current[key] = peer;
+        }
+      }),
+    [],
+  );
+
+  const addPeerEvents = React.useCallback(
+    (key: string, peer: Peer.Instance, signal: ConnectionSignal) => {
+      const newUser = getPresenceState()[key]?.[0]?.user;
+      if (!newUser) return;
+
+      if (signal.withStream) {
+        peer.on('stream', stream =>
+          joinedUsers.push({
+            presenceKey: key,
+            info: newUser,
+            stream,
+          }),
+        );
+      } else {
+        joinedUsers.push({
+          presenceKey: key,
+          info: newUser,
+          stream: null,
+        });
+      }
+
+      peer.on('data', (data: string) => {
+        const payload: PeerDataPayload = JSON.parse(data);
+
+        joinedUsers.reset(arr => {
+          const stream = arr.find(({ presenceKey }) => presenceKey === key)?.stream;
+
+          if (stream) {
+            if ('video' in payload.state) {
+              const track = stream.getVideoTracks()[0];
+              if (track) track.enabled = payload.state.video!;
+            }
+
+            if ('audio' in payload.state) {
+              const track = stream.getAudioTracks()[0];
+              if (track) track.enabled = payload.state.audio!;
+            }
+          }
+
+          return arr;
+        });
+      });
+    },
+    [],
+  );
+
+  const sendPeerData = React.useCallback((payload: PeerDataPayload) => {
+    const peers = Object.values(peersRef.current);
+    const data = JSON.stringify(payload);
+
+    for (const peer of peers) peer.send(data);
+  }, []);
+
+  const streamRef = React.useRef(stream);
   React.useEffect(() => {
     streamRef.current = stream;
   }, [stream]);
@@ -211,12 +356,13 @@ function useRoomChannel(
   return {
     channelRef,
     presenceKey,
-    host: roomHost,
     joinedUsers: joinedUsers.array,
+    host: roomHost,
+    connectToChannel,
+    leaveChannel,
     getPresenceState,
     startTracking,
     sendJoinResponse,
-    connectToChannel,
-    leaveChannel,
+    sendPeerData,
   };
 }
