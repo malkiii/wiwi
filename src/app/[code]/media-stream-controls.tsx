@@ -61,9 +61,9 @@ export function MeiaStateToggle({ kind, className, ...props }: MeiaStateTogglePr
     <Button
       {...props}
       variant={hasPermission ? (isEnabled ? 'secondary' : 'default') : 'destructive'}
-      className={cn('aspect-square size-14 rounded-full p-0', className)}
+      className={cn('aspect-square size-12 p-0', className)}
       disabled={!hasPermission}
-      onClick={() => {
+      onClick={async () => {
         const track = getMediaTracks(userMedia.stream)[kind];
         if (!track) return;
 
@@ -85,7 +85,7 @@ export function MediaStreamSettingsMenu({ className, ...props }: ButtonProps) {
         <Button
           {...props}
           variant="secondary"
-          className={cn('aspect-square size-14 rounded-full p-0', className)}
+          className={cn('aspect-square size-12 p-0', className)}
         >
           <DropDownMenuIcon className="size-6" />
         </Button>

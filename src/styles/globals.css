@@ -83,3 +83,33 @@
     @apply block h-auto max-w-full;
   }
 }
+
+@keyframes wave-edge {
+  0% {
+    height: var(--size);
+  }
+  33% {
+    height: 30%;
+  }
+  66% {
+    height: 55%;
+  }
+  100% {
+    height: var(--size);
+  }
+}
+
+@keyframes wave-middle {
+  0% {
+    height: var(--size);
+  }
+  33% {
+    height: 55%;
+  }
+  66% {
+    height: 30%;
+  }
+  100% {
+    height: var(--size);
+  }
+}

@@ -37,30 +37,32 @@ export function MeetingRoomProvider({ code, children }: MeetingRoomProviderProps
   const media = useMediaDevices();
   const [state, setState] = React.useState<MeetingRoomContextData['state']>();
 
+  const room = useRoomChannel(code, media.stream, setState);
+
   const constraintsRef = React.useRef<MediaStreamConstraints>({
     video: { facingMode: 'user' },
     audio: { noiseSuppression: true, echoCancellation: false },
   });
+
   const firstMount = React.useRef(true);
-
-  const room = useRoomChannel(code, media.stream, setState);
-
   React.useEffect(() => {
     if (firstMount.current) {
       firstMount.current = false;
       const { video, audio } = constraintsRef.current;
 
+      const startUserMedia = () => media.start(constraintsRef.current);
+
       (async () => {
         try {
-          await media.start(constraintsRef.current);
+          await startUserMedia();
         } catch {
           try {
             constraintsRef.current = { audio };
-            await media.start(constraintsRef.current);
+            await startUserMedia();
           } catch {
             try {
               constraintsRef.current = { video };
-              await media.start(constraintsRef.current);
+              await startUserMedia();
             } catch (error) {
               console.warn(error);
             }
@@ -189,9 +191,7 @@ function useRoomChannel(
 
         console.log({ event: 'JOIN_RESPONSE', payload });
 
-        updateUserState('joined');
         hasJoined.current = true;
-
         const signals = await createPeers();
 
         channelRef.current!.send({
@@ -202,6 +202,8 @@ function useRoomChannel(
             signals,
           } satisfies ConnectionRequestPayload['payload'],
         });
+
+        updateUserState('joined');
       },
     );
 
@@ -301,13 +303,14 @@ function useRoomChannel(
       if (!newUser) return;
 
       if (signal.withStream) {
-        peer.on('stream', stream =>
+        peer.on('stream', stream => {
+          console.log('stream:', stream);
           joinedUsers.push({
             presenceKey: key,
             info: newUser,
             stream,
-          }),
-        );
+          });
+        });
       } else {
         joinedUsers.push({
           presenceKey: key,
