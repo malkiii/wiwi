@@ -8,6 +8,7 @@ const eventsArray = [
   'CONNECTION_REQUEST',
   'CONNECTION_RESPONSE',
   'MESSAGE',
+  'LEAVE',
 ] as const;
 
 export const broadcastEvents = eventsArray.reduce<{

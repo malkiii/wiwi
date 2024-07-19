@@ -1,16 +1,25 @@
 'use client';
 
+import React from 'react';
 import Link from 'next/link';
-import { useCallback } from 'react';
 
 import { Button } from '~/components/ui/button';
 import { useSession } from '~/components/session-provider';
 import { HomeIcon as BackIcon, VideoIcon as JoinIcon } from '~/components/icons';
 import { useMeetingRoom } from './meeting-room-provider';
 import { UserMeetingInstant } from './user-meeting-instant';
-import { MediaStreamSettingsMenu, MeiaStateToggle } from './media-stream-controls';
 import { LoadingAnimation } from '~/components/loading-animation';
 import { WarningPage } from './waning-page';
+import { cn } from '~/lib/utils';
+
+import {
+  MediaStreamSettingsMenu,
+  MeiaStateToggle,
+  ChatToggle,
+  ParticipantsToggle,
+  HangUpButton,
+  ShareScreenButton,
+} from './media-stream-controls';
 
 export function MeetingRoom() {
   const { state } = useMeetingRoom();
@@ -41,11 +50,11 @@ function GettingReady() {
 
   const isJoining = state === 'joining';
 
-  const joinToMeeting = useCallback(async () => {
+  const joinToMeeting = React.useCallback(async () => {
     if (!user) return;
     setState('joining');
 
-    const response = await room.startTracking();
+    const response = await room.track();
 
     if (response !== 'ok') return setState('error');
     if (user.roomCode !== code) return;
@@ -91,11 +100,12 @@ function GettingReady() {
 function Room() {
   const currentUser = useSession().user!;
   const { userMedia, room } = useMeetingRoom();
+  const [sidebarContentType, setSidebarContentType] = React.useState<'chat' | 'participants'>();
 
   return (
     <div className="flex size-full w-full flex-col">
-      <div className="flex flex-1 items-center justify-center px-10">
-        <div className="flex flex-wrap justify-center gap-2 transition-all duration-200 *:w-[calc(100vw-2*theme(padding.12))] *:max-w-md">
+      <div className="flex flex-1 items-center">
+        <div className="flex flex-1 flex-wrap justify-center gap-2 px-10 transition-all duration-200 *:w-[calc(100vw-2*theme(padding.12))] *:max-w-md">
           <UserMeetingInstant
             key={currentUser.id}
             presenceKey={room.presenceKey.current}
@@ -111,12 +121,37 @@ function Room() {
             />
           ))}
         </div>
+        <div
+          className={cn(
+            '[--width:400px]',
+            'grid min-h-full w-0 overflow-hidden transition-all duration-200',
+            !!sidebarContentType && 'w-[calc(var(--width)+theme(padding.4))]',
+          )}
+        >
+          <div className="mx-auto min-h-full w-[--width] rounded-lg bg-primary text-accent-foreground"></div>
+        </div>
       </div>
       <div className="flex w-full flex-grow-0 items-center justify-center gap-4 py-4">
         <MeiaStateToggle kind="audio" />
         <MeiaStateToggle kind="video" />
+        <ChatToggle
+          variant={sidebarContentType === 'chat' ? 'default' : 'secondary'}
+          onClick={() => setSidebarContentType(prev => (prev === 'chat' ? undefined : 'chat'))}
+        />
+        <ParticipantsToggle
+          variant={sidebarContentType === 'participants' ? 'default' : 'secondary'}
+          onClick={() =>
+            setSidebarContentType(prev => (prev === 'participants' ? undefined : 'participants'))
+          }
+        />
+        <ShareScreenButton />
         <MediaStreamSettingsMenu />
+        <HangUpButton />
       </div>
     </div>
   );
+}
+
+function SidebarContent({ children }: React.PropsWithChildren) {
+  return <div className=""></div>;
 }

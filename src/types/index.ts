@@ -1,7 +1,6 @@
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import type { JWT } from 'next-auth/jwt';
 import type { Session } from 'next-auth';
-import type { RealtimePresenceState } from '@supabase/supabase-js';
 import type Peer from 'simple-peer';
 
 declare module 'next-auth/jwt' {
@@ -18,7 +17,12 @@ export type MeetingUser = {
   stream: MediaStream | null;
 };
 
-export type PresenceState = RealtimePresenceState<{ user: User }>;
+export type MediaState = { video: boolean; audio: boolean };
+
+export type PresenceStateValue = {
+  user: User;
+  state: MediaState;
+};
 
 export type Payload<T = Record<string, string>> = {
   type: string;
@@ -52,3 +56,11 @@ export type ConnectionResponsePayload = Payload<{
 export type PeerDataPayload = {
   state: { video?: boolean; audio?: boolean };
 };
+
+export type ChatMessage = {
+  user: User;
+  message: string;
+  timestamp: number;
+};
+
+export type LeaveEventPayload = Payload<{ key: string }>;
