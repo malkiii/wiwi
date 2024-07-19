@@ -7,8 +7,8 @@ export function sendVerificationEmail(payload: UserCredentials) {
   const transporter = createTransport({
     service: 'gmail',
     auth: {
-      user: env.EMAIL_USER,
-      pass: env.EMAIL_PASSWORD,
+      user: env.GMAIL_USER,
+      pass: env.GMAIL_APP_PASSWORD,
     },
   });
 
@@ -19,7 +19,7 @@ export function sendVerificationEmail(payload: UserCredentials) {
 
     transporter.sendMail(
       {
-        from: env.EMAIL_USER,
+        from: env.GMAIL_USER,
         to: payload.email,
         subject: 'Verify your email address!',
         html: verficationTemplate(payload.email, confirmationUrl.toString()),

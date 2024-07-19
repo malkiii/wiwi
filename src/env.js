@@ -3,13 +3,13 @@ import { z } from 'zod';
 
 export const env = createEnv({
   server: {
-    DATABASE_URL: z.string().url(),
+    POSTGRES_DATABASE_URL: z.string().url(),
     AUTH_SECRET: z.string(),
     AUTH_URL: z.string().url(),
     AUTH_GOOGLE_ID: z.string(),
     AUTH_GOOGLE_SECRET: z.string(),
-    EMAIL_USER: z.string().email(),
-    EMAIL_PASSWORD: z.string(),
+    GMAIL_USER: z.string().email(),
+    GMAIL_APP_PASSWORD: z.string(),
     NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
   },
   /**
@@ -22,13 +22,13 @@ export const env = createEnv({
     NEXT_PUBLIC_SUPABASE_ANON_KEY: z.string(),
   },
   runtimeEnv: {
-    DATABASE_URL: process.env.DATABASE_URL,
+    POSTGRES_DATABASE_URL: process.env.POSTGRES_DATABASE_URL,
     AUTH_SECRET: process.env.AUTH_SECRET,
     AUTH_URL: process.env.AUTH_URL,
     AUTH_GOOGLE_ID: process.env.AUTH_GOOGLE_ID,
     AUTH_GOOGLE_SECRET: process.env.AUTH_GOOGLE_SECRET,
-    EMAIL_PASSWORD: process.env.EMAIL_PASSWORD,
-    EMAIL_USER: process.env.EMAIL_USER,
+    GMAIL_APP_PASSWORD: process.env.GMAIL_APP_PASSWORD,
+    GMAIL_USER: process.env.GMAIL_USER,
     NODE_ENV: process.env.NODE_ENV,
 
     // Expose client-side env vars
