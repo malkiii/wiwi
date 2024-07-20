@@ -7,7 +7,7 @@ const eventsArray = [
   'JOIN_RESPONSE',
   'CONNECTION_REQUEST',
   'CONNECTION_RESPONSE',
-  'MESSAGE',
+  'CHAT_MESSAGE',
   'LEAVE',
 ] as const;
 

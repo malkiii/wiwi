@@ -58,9 +58,13 @@ export type PeerDataPayload = {
 };
 
 export type ChatMessage = {
-  user: User;
+  user: { name: string; image: string | null };
   message: string;
-  timestamp: number;
 };
 
-export type LeaveEventPayload = Payload<{ key: string }>;
+export type ChatMessagePayload = Payload<ChatMessage>;
+
+export type LeaveEventPayload = Payload<{
+  key: string;
+  name: string;
+}>;

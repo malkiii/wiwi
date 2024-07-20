@@ -6,7 +6,10 @@ import type { RealtimeChannel, RealtimePresenceState } from '@supabase/supabase-
 import { client, broadcastEvents } from '~/lib/supabase';
 import type Peer from 'simple-peer';
 
+import { toast } from '~/components/ui/sonner';
 import { useSession } from '~/components/session-provider';
+import { createPeerInstance, getMediaTracks } from '~/lib/utils';
+
 import type {
   MeetingUser,
   PresenceStateValue,
@@ -16,9 +19,9 @@ import type {
   RequestSignals,
   ConnectionSignal,
   ChatMessage,
+  ChatMessagePayload,
   LeaveEventPayload,
 } from '~/types';
-import { createPeerInstance, getMediaTracks } from '~/lib/utils';
 
 type MeetingRoomContextData = {
   code: string;
@@ -167,7 +170,10 @@ function useRoomChannel(
     await channelRef.current.send({
       type: 'broadcast',
       event: broadcastEvents.LEAVE,
-      payload: { key: presenceKey.current } satisfies LeaveEventPayload['payload'],
+      payload: {
+        key: presenceKey.current,
+        name: user.name,
+      } satisfies LeaveEventPayload['payload'],
     });
   }, []);
 
@@ -216,10 +222,39 @@ function useRoomChannel(
         await sendJoinResponse({ key, status: 'ACCEPTED' });
       } else if (isHost) {
         waitingUsers.push({ presenceKey: key, info: presence.user, stream: null });
+
+        toast(`${presence.user.name} wants to join!`, {
+          action: {
+            label: 'Accept',
+            onClick: async () => {
+              const existingUser = removeWaitingUser(key);
+              if (!existingUser) return;
+
+              await sendJoinResponse({ key, status: 'ACCEPTED' });
+            },
+          },
+        });
       }
     });
 
-    // channelRef.current.on('presence', { event: 'leave' }, ({ key }) => {});
+    channelRef.current.on('presence', { event: 'leave' }, ({ key }) => {
+      if (key === presenceKey.current) return;
+      if (hasJoined.current) return;
+
+      removeWaitingUser(key);
+    });
+
+    const removeWaitingUser = (key: string) => {
+      let userIndex = -1;
+      waitingUsers.reset(arr => {
+        userIndex = arr.findIndex(({ presenceKey }) => presenceKey === key);
+        return arr;
+      });
+
+      if (userIndex === -1) return;
+
+      return waitingUsers.pop(userIndex);
+    };
 
     channelRef.current.on(
       'broadcast',
@@ -278,7 +313,7 @@ function useRoomChannel(
           });
         });
 
-        addPeerEvents(payload.key, peer, singal);
+        addPeerEvents(payload.key, peer, singal, false);
 
         peer.signal(singal.data);
         peersRef.current[payload.key] = peer;
@@ -297,7 +332,7 @@ function useRoomChannel(
         const peer = peersRef.current[payload.key];
         if (!peer) return;
 
-        addPeerEvents(payload.key, peer, payload.signal);
+        addPeerEvents(payload.key, peer, payload.signal, true);
 
         peer.signal(payload.signal.data);
       },
@@ -356,9 +391,14 @@ function useRoomChannel(
   );
 
   const addPeerEvents = React.useCallback(
-    (key: string, peer: Peer.Instance, signal: ConnectionSignal) => {
+    (key: string, peer: Peer.Instance, signal: ConnectionSignal, isInitiator: boolean) => {
       const presence = getPresenceState()[key]?.[0];
       if (!presence) return;
+
+      const addNewUser = (stream: MediaStream | null = null) => {
+        joinedUsers.push({ presenceKey: key, info: presence.user, stream });
+        if (!isInitiator) toast(`${presence.user.name} has joined the meeting!`);
+      };
 
       peer.on('close', () => {
         let userIndex = -1;
@@ -370,6 +410,7 @@ function useRoomChannel(
         if (userIndex === -1) return;
 
         joinedUsers.pop(userIndex);
+        toast(`${presence.user.name} has left.`);
       });
 
       if (signal.withStream) {
@@ -379,16 +420,27 @@ function useRoomChannel(
           if (tracks.video) tracks.video.enabled = presence.state.video;
           if (tracks.audio) tracks.audio.enabled = presence.state.audio;
 
-          joinedUsers.push({ presenceKey: key, info: presence.user, stream });
+          addNewUser(stream);
         });
       } else {
-        joinedUsers.push({ presenceKey: key, info: presence.user, stream: null });
+        addNewUser();
       }
 
       participantsRef.current.push(key);
     },
     [],
   );
+
+  const sendChatMessage = React.useCallback((info: MeetingUser['info'], message: string) => {
+    return channelRef.current?.send({
+      type: 'broadcast',
+      event: broadcastEvents.CHAT_MESSAGE,
+      payload: {
+        user: { name: info.name, image: info.image },
+        message,
+      } satisfies ChatMessagePayload['payload'],
+    });
+  }, []);
 
   const streamRef = React.useRef(stream);
   React.useEffect(() => {
@@ -407,6 +459,7 @@ function useRoomChannel(
     leaveChannel,
     getPresenceState,
     sendJoinResponse,
+    sendChatMessage,
     hangUp,
   };
 }

@@ -58,7 +58,9 @@ export function UserMeetingInstant({
       {!isMuted && !isVideoEnabled && (
         <SpeakingAnimation isSpeaking={isSpeaking} className="absolute right-3 top-3 z-30 w-[7%]" />
       )}
-      <span className="absolute bottom-3 left-3 z-30 block text-sm">{info.name}</span>
+      <span className="absolute bottom-3 left-3 z-30 block text-sm">
+        {isVideoMuted ? 'You' : info.name}
+      </span>
     </div>
   );
 }
