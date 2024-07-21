@@ -1,5 +1,4 @@
 import { type NextRequest } from 'next/server';
-import { notFound, redirect } from 'next/navigation';
 import { signIn } from '~/server/auth';
 
 import { createUser, getUser } from '~/server/db/user';
@@ -12,7 +11,7 @@ type Context = {
 
 export async function GET(request: NextRequest, context: Context) {
   const token = context.params.token;
-  if (!token) return notFound();
+  if (!token) return Response.error();
 
   try {
     const payload = verifyToken(token);
@@ -21,7 +20,7 @@ export async function GET(request: NextRequest, context: Context) {
     return await signUp(credentials);
   } catch (error) {
     console.error(error);
-    return notFound();
+    return Response.error();
   }
 }
 
@@ -37,7 +36,7 @@ async function signUp(credentials: UserCredentials) {
 
     await signIn('credentials', { ...credentials, redirect: false });
 
-    return redirect('/app');
+    return Response.redirect(new URL('/app', import.meta.url));
   } catch (error) {
     console.error(error);
     return Response.json({ error: 'Failed to create user!' }, { status: 500 });
