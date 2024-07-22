@@ -41,10 +41,15 @@ type MeiaStateToggleProps = ButtonProps & {
 export function MeiaStateToggle({ kind, className, ...props }: MeiaStateToggleProps) {
   const { userMedia, room } = useMeetingRoom();
 
-  const getCurrentState = React.useCallback(
-    () => getMediaTracks(userMedia.stream)[kind]?.enabled,
-    [userMedia.stream],
-  );
+  const getCurrentState = React.useCallback(() => {
+    const track = getMediaTracks(userMedia.stream)[kind];
+
+    if (kind === 'audio' && track && room.isMuted) {
+      track.enabled = false;
+    }
+
+    return track?.enabled;
+  }, [userMedia.stream, room.isMuted]);
 
   const isEnabled = getCurrentState();
   const hasPermission = isEnabled !== undefined;
@@ -65,7 +70,7 @@ export function MeiaStateToggle({ kind, className, ...props }: MeiaStateTogglePr
       {...props}
       variant={hasPermission ? (isEnabled ? 'secondary' : 'default') : 'destructive'}
       className={cn('aspect-square size-12 rounded-full p-0', className)}
-      disabled={!hasPermission}
+      disabled={!hasPermission || room.isMuted}
       onClick={async () => {
         const track = getMediaTracks(userMedia.stream)[kind];
         if (!track) return;
@@ -118,7 +123,6 @@ export function ChatToggle({ className, onClick, ...props }: ButtonProps) {
 
   return (
     <Button
-      variant="secondary"
       {...props}
       className={cn('relative aspect-square size-12 rounded-full p-0', className)}
       onClick={e => {
@@ -127,7 +131,7 @@ export function ChatToggle({ className, onClick, ...props }: ButtonProps) {
       }}
     >
       <ChatIcon className="size-6" />
-      {readMessages < room.chatMessages.length && <NewContentMark />}
+      {props.variant !== 'default' && readMessages < room.chatMessages.length && <NewContentMark />}
     </Button>
   );
 }
@@ -136,11 +140,7 @@ export function ParticipantsToggle({ className, ...props }: ButtonProps) {
   const { room } = useMeetingRoom();
 
   return (
-    <Button
-      variant="secondary"
-      {...props}
-      className={cn('relative aspect-square size-12 rounded-full p-0', className)}
-    >
+    <Button {...props} className={cn('relative aspect-square size-12 rounded-full p-0', className)}>
       <UsersIcon className="size-6" />
       {room.waitingUsers.length > 0 && <NewContentMark />}
     </Button>

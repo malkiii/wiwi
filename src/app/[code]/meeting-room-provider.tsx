@@ -21,6 +21,7 @@ import type {
   ChatMessage,
   ChatMessagePayload,
   LeaveEventPayload,
+  PeerMessageData,
 } from '~/types';
 
 type MeetingRoomContextData = {
@@ -114,14 +115,27 @@ function useRoomChannel(
 
   const participantsRef = React.useRef<string[]>([]);
 
+  const streamRef = React.useRef(stream);
   const channelRef = React.useRef<RealtimeChannel>();
   const peersRef = React.useRef<Record<string, Peer.Instance>>({});
   const hasJoined = React.useRef(false);
   const presenceKey = React.useRef('');
   const hostKey = React.useRef<string>();
 
+  const [isMuted, setIsMuted] = React.useState(false);
+  const [mutedUsers, setMutedUsers] = React.useState<string[]>([]);
+  const rejectedUsersRef = React.useRef<string[]>([]);
+
   const roomHost = React.useMemo(() => {
-    const host = joinedUsers.array.find(({ info }) => info.roomCode === code);
+    const host =
+      user.roomCode === code
+        ? {
+            presenceKey: presenceKey.current,
+            stream: streamRef.current,
+            info: user,
+          }
+        : joinedUsers.array.find(({ info }) => info.roomCode === code);
+
     hostKey.current = host?.presenceKey;
 
     return host;
@@ -219,18 +233,20 @@ function useRoomChannel(
       const isAlreadyJoined = participantsRef.current.includes(key);
 
       if ((isHost || (!isHost && !hostKey.current)) && isAlreadyJoined) {
-        await sendJoinResponse({ key, status: 'ACCEPTED' });
+        await sendJoinResponse({ keys: [key], status: 'ACCEPTED' });
       } else if (isHost) {
+        if (rejectedUsersRef.current.includes(key)) {
+          return await sendJoinResponse({ keys: [key], status: 'REJECTED' });
+        }
+
         waitingUsers.push({ presenceKey: key, info: presence.user, stream: null });
 
         toast(`${presence.user.name} wants to join!`, {
           action: {
             label: 'Accept',
             onClick: async () => {
-              const existingUser = removeWaitingUser(key);
-              if (!existingUser) return;
-
-              await sendJoinResponse({ key, status: 'ACCEPTED' });
+              removeWaitingUser(key);
+              await sendJoinResponse({ keys: [key], status: 'ACCEPTED' });
             },
           },
         });
@@ -261,7 +277,7 @@ function useRoomChannel(
       { event: broadcastEvents.JOIN_RESPONSE },
       async ({ payload }: JoinResponsePayload) => {
         if (!payload) return;
-        if (payload.key !== presenceKey.current) return;
+        if (!payload.keys.includes(presenceKey.current)) return;
 
         if (payload.status === 'REJECTED') {
           return updateUserState('rejected');
@@ -299,6 +315,10 @@ function useRoomChannel(
         const singal = payload.signals[presenceKey.current];
         if (!singal) return;
 
+        if (payload.key in peersRef.current) {
+          delete peersRef.current[payload.key];
+        }
+
         const peer = createPeerInstance(streamRef.current);
 
         peer.on('signal', signal => {
@@ -335,6 +355,17 @@ function useRoomChannel(
         addPeerEvents(payload.key, peer, payload.signal, true);
 
         peer.signal(payload.signal.data);
+      },
+    );
+
+    channelRef.current.on(
+      'broadcast',
+      { event: broadcastEvents.CHAT_MESSAGE },
+      ({ payload }: ChatMessagePayload) => {
+        if (!payload) return;
+        if (presenceKey.current === payload.id) return;
+
+        chatMessages.push(payload);
       },
     );
 
@@ -400,6 +431,7 @@ function useRoomChannel(
         if (!isInitiator) toast(`${presence.user.name} has joined the meeting!`);
       };
 
+      // remove user from the list if the user leaves
       peer.on('close', () => {
         let userIndex = -1;
         joinedUsers.reset(arr => {
@@ -413,6 +445,26 @@ function useRoomChannel(
         toast(`${presence.user.name} has left.`);
       });
 
+      // handle the host commands
+      peer.on('data', async (data: string) => {
+        const message: PeerMessageData = JSON.parse(data);
+
+        if (message.type === 'mute') {
+          setIsMuted(true);
+        } else if (message.type === 'unmute') {
+          const track = getMediaTracks(streamRef.current).audio;
+          if (track) track.enabled = true;
+
+          setIsMuted(false);
+        } else if (message.type === 'leave') {
+          leaveChannel();
+          await hangUp();
+
+          updateUserState('rejected');
+        }
+      });
+
+      // initialize the stream if the user has it
       if (signal.withStream) {
         peer.on('stream', stream => {
           const tracks = getMediaTracks(stream);
@@ -436,13 +488,34 @@ function useRoomChannel(
       type: 'broadcast',
       event: broadcastEvents.CHAT_MESSAGE,
       payload: {
+        id: presenceKey.current,
         user: { name: info.name, image: info.image },
+        timestamp: Date.now(),
         message,
       } satisfies ChatMessagePayload['payload'],
     });
   }, []);
 
-  const streamRef = React.useRef(stream);
+  const sendMuteCommand = React.useCallback(async (key: string, muted: boolean) => {
+    if (!channelRef.current) return;
+
+    const peer = peersRef.current[key];
+    if (!peer) return;
+
+    peer.send(JSON.stringify({ type: muted ? 'mute' : 'unmute' } satisfies PeerMessageData));
+    setMutedUsers(arr => (muted ? [...arr, key] : arr.filter(k => k !== key)));
+  }, []);
+
+  const sendLeaveCommand = React.useCallback(async (key: string) => {
+    if (!channelRef.current) return;
+
+    const peer = peersRef.current[key];
+    if (!peer) return;
+
+    peer.send(JSON.stringify({ type: 'leave' } satisfies PeerMessageData));
+    rejectedUsersRef.current.push(key);
+  }, []);
+
   React.useEffect(() => {
     streamRef.current = stream;
   }, [stream]);
@@ -452,14 +525,18 @@ function useRoomChannel(
     presenceKey,
     joinedUsers: joinedUsers.array,
     waitingUsers: waitingUsers.array,
-    chatMessages: chatMessages.array,
+    chatMessages,
     host: roomHost,
+    mutedUsers,
+    isMuted,
     connectToChannel,
     track,
     leaveChannel,
     getPresenceState,
     sendJoinResponse,
     sendChatMessage,
+    sendMuteCommand,
+    sendLeaveCommand,
     hangUp,
   };
 }

@@ -2,7 +2,8 @@
 @tailwind components;
 @tailwind utilities;
 
-:root {
+:root,
+.light {
   --background: 0 0% 100%;
   --foreground: 240 10% 3.9%;
 
@@ -81,6 +82,12 @@
 
   image {
     @apply block h-auto max-w-full;
+  }
+
+  .overflow-auto {
+    scrollbar-width: thin;
+    scrollbar-color: hsl(var(--foreground) / 0.2) transparent;
+    scrollbar-gutter: stable;
   }
 }
 

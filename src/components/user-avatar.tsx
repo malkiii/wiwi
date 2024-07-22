@@ -5,7 +5,7 @@ import type { User } from '~/types';
 import { cn } from '~/lib/utils';
 
 type AvatarProps = React.ComponentProps<'div'> & {
-  user: User;
+  user: Pick<User, 'name' | 'image'>;
   size?: number;
 };
 

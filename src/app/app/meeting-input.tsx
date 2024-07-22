@@ -14,7 +14,7 @@ import { VideoIcon, WarningIcon, ShareIcon } from '~/components/icons';
 
 export function MeetingInput() {
   const router = useRouter();
-  const { roomCode } = useSession().user!;
+  const { user } = useSession();
 
   const [isNavigating, setIsNavigating] = useState(false);
 
@@ -64,13 +64,13 @@ export function MeetingInput() {
       )}
       <Button onClick={() => setIsNavigating(true)} asChild>
         <Link
-          href={`/${roomCode}`}
+          href={`/${user?.roomCode}`}
           className={isNavigating ? 'pointer-events-none opacity-50' : ''}
         >
           <VideoIcon className="mr-2 size-5" /> New meeting
         </Link>
       </Button>
-      <ShareMeeting code={roomCode}>
+      <ShareMeeting code={user?.roomCode}>
         <Button variant="outline" disabled={isNavigating}>
           <ShareIcon className="mr-2 size-5" /> Share your room link
         </Button>

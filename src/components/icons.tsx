@@ -30,6 +30,9 @@ export {
   Share2 as ShareIcon,
   MessagesSquare as ChatIcon,
   Users as UsersIcon,
+  SendHorizontal as SendIcon,
+  CircleMinus as RemoveIcon,
+  X,
 } from 'lucide-react';
 
 // prettier-ignore

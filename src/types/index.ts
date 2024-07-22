@@ -31,7 +31,7 @@ export type Payload<T = Record<string, string>> = {
 };
 
 export type JoinResponsePayload = Payload<{
-  key: string;
+  keys: string[];
   status: 'ACCEPTED' | 'REJECTED';
 }>;
 
@@ -58,8 +58,10 @@ export type PeerDataPayload = {
 };
 
 export type ChatMessage = {
-  user: { name: string; image: string | null };
+  id: string;
+  user: Pick<User, 'name' | 'image'>;
   message: string;
+  timestamp: number;
 };
 
 export type ChatMessagePayload = Payload<ChatMessage>;
@@ -68,3 +70,7 @@ export type LeaveEventPayload = Payload<{
   key: string;
   name: string;
 }>;
+
+export type PeerMessageData = {
+  type: 'mute' | 'unmute' | 'leave';
+};
