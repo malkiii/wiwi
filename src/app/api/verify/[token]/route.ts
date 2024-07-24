@@ -13,18 +13,20 @@ export async function GET(request: NextRequest, context: Context) {
   const token = context.params.token;
   if (!token) return Response.error();
 
+  const baseUrl = request.nextUrl.origin;
+
   try {
     const payload = verifyToken(token);
     const credentials = userCredentialsSchema.parse(payload);
 
-    return await signUp(credentials);
+    return await signUp(credentials, baseUrl);
   } catch (error) {
     console.error(error);
     return Response.error();
   }
 }
 
-async function signUp(credentials: UserCredentials) {
+async function signUp(credentials: UserCredentials, baseUrl: string) {
   try {
     const existingUser = await getUser(credentials.email);
 
@@ -36,7 +38,7 @@ async function signUp(credentials: UserCredentials) {
 
     await signIn('credentials', { ...credentials, redirect: false });
 
-    return Response.redirect(new URL('/app', import.meta.url));
+    return Response.redirect(new URL('/app', baseUrl));
   } catch (error) {
     console.error(error);
     return Response.json({ error: 'Failed to create user!' }, { status: 500 });
