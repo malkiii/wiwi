@@ -17,7 +17,7 @@ export default async function Layout({ params, children }: LayoutProps) {
   if (!session?.user) return redirect('/login');
 
   return (
-    <div className="dark flex h-dvh items-center justify-center bg-primary-foreground py-2 text-foreground">
+    <div className="dark flex h-dvh items-center justify-center bg-primary-foreground py-[--room-gap] text-foreground [--room-gap:0.7rem]">
       <Suspense fallback={<LoadingAnimation key="loading" className="w-20" />}>{children}</Suspense>
       <Toaster position="top-left" />
     </div>
