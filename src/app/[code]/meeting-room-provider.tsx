@@ -29,7 +29,7 @@ type MeetingRoomContextData = {
   userMedia: ReturnType<typeof useMediaDevices>;
   constraintsRef: React.MutableRefObject<MediaStreamConstraints>;
   room: ReturnType<typeof useRoomChannel>;
-  state: 'ready' | 'joining' | 'joined' | 'rejected' | 'error' | undefined;
+  state: 'ready' | 'joining' | 'joined' | 'rejected' | 'full' | 'error' | undefined;
   setState: React.Dispatch<React.SetStateAction<MeetingRoomContextData['state']>>;
 };
 
@@ -113,11 +113,15 @@ function useRoomChannel(
   const waitingUsers = useArray<MeetingUser>();
   const chatMessages = useArray<ChatMessage>();
 
+  // store the participants that have joined the meeting before
   const participantsRef = React.useRef<string[]>([]);
 
   const streamRef = React.useRef(stream);
   const channelRef = React.useRef<RealtimeChannel>();
+
+  // store the peer connections
   const peersRef = React.useRef<Record<string, Peer.Instance>>({});
+
   const hasJoined = React.useRef(false);
   const presenceKey = React.useRef('');
   const hostKey = React.useRef<string>();
@@ -127,25 +131,18 @@ function useRoomChannel(
   const rejectedUsersRef = React.useRef<string[]>([]);
 
   const roomHost = React.useMemo(() => {
-    const host =
-      user.roomCode === code
-        ? {
-            presenceKey: presenceKey.current,
-            stream: streamRef.current,
-            info: user,
-          }
-        : joinedUsers.array.find(({ info }) => info.roomCode === code);
-
+    const host = joinedUsers.array.find(({ info }) => info.roomCode === code);
     hostKey.current = host?.presenceKey;
 
     return host;
-  }, [code, joinedUsers.array]);
+  }, [code, stream, joinedUsers.array]);
 
   const getPresenceState = React.useCallback(
     () => channelRef.current?.presenceState() as RealtimePresenceState<PresenceStateValue>,
     [],
   );
 
+  // send a join request by tracking the user's state
   const track = React.useCallback(async () => {
     if (!channelRef.current) return;
 
@@ -181,12 +178,12 @@ function useRoomChannel(
   const hangUp = React.useCallback(async () => {
     if (!channelRef.current) return;
 
+    // send a leave event to remove the user from the participants list
     await channelRef.current.send({
       type: 'broadcast',
       event: broadcastEvents.LEAVE,
       payload: {
-        key: presenceKey.current,
-        name: user.name,
+        id: presenceKey.current,
       } satisfies LeaveEventPayload['payload'],
     });
   }, []);
@@ -203,10 +200,7 @@ function useRoomChannel(
       },
     });
 
-    channelRef.current.on('presence', { event: 'sync' }, () => {
-      console.log('state:', getPresenceState());
-    });
-
+    // handle the join event
     channelRef.current.on('presence', { event: 'join' }, async ({ key, newPresences }) => {
       if (presenceKey.current === key) return;
       if (!hasJoined.current) return;
@@ -219,6 +213,7 @@ function useRoomChannel(
         return arr;
       });
 
+      // update the user's media state
       if (partner) {
         const tracks = getMediaTracks(partner.stream);
 
@@ -230,12 +225,14 @@ function useRoomChannel(
       if (presence.user.roomCode === code) return;
 
       const isHost = user.roomCode === code;
-      const isAlreadyJoined = participantsRef.current.includes(key);
+      const isAlreadyJoined = participantsRef.current.includes(presence.user.id);
 
+      // send a join response if the user has already joined
       if ((isHost || (!isHost && !hostKey.current)) && isAlreadyJoined) {
         await sendJoinResponse({ keys: [key], status: 'ACCEPTED' });
       } else if (isHost) {
-        if (rejectedUsersRef.current.includes(key)) {
+        // check if the user has been rejected before
+        if (rejectedUsersRef.current.includes(presence.user.id)) {
           return await sendJoinResponse({ keys: [key], status: 'REJECTED' });
         }
 
@@ -253,6 +250,7 @@ function useRoomChannel(
       }
     });
 
+    // handle the leave event
     channelRef.current.on('presence', { event: 'leave' }, ({ key }) => {
       if (key === presenceKey.current) return;
       if (hasJoined.current) return;
@@ -272,6 +270,7 @@ function useRoomChannel(
       return waitingUsers.pop(userIndex);
     };
 
+    // handle the join response event
     channelRef.current.on(
       'broadcast',
       { event: broadcastEvents.JOIN_RESPONSE },
@@ -280,10 +279,9 @@ function useRoomChannel(
         if (!payload.keys.includes(presenceKey.current)) return;
 
         if (payload.status === 'REJECTED') {
+          leaveChannel();
           return updateUserState('rejected');
         }
-
-        console.log({ event: 'JOIN_RESPONSE', payload });
 
         if (hasJoined.current) return;
 
@@ -303,6 +301,7 @@ function useRoomChannel(
       },
     );
 
+    // handle the connection request event
     channelRef.current.on(
       'broadcast',
       { event: broadcastEvents.CONNECTION_REQUEST },
@@ -310,11 +309,10 @@ function useRoomChannel(
         if (!payload || !hasJoined.current) return;
         if (payload.key === presenceKey.current) return;
 
-        console.log({ event: 'CONNECTION_REQUEST', payload });
-
         const singal = payload.signals[presenceKey.current];
         if (!singal) return;
 
+        // remove the unanswered peer connection
         if (payload.key in peersRef.current) {
           delete peersRef.current[payload.key];
         }
@@ -340,14 +338,13 @@ function useRoomChannel(
       },
     );
 
+    // handle the connection response event
     channelRef.current.on(
       'broadcast',
       { event: broadcastEvents.CONNECTION_RESPONSE },
       ({ payload }: ConnectionResponsePayload) => {
         if (!payload) return;
         if (payload.callerKey !== presenceKey.current) return;
-
-        console.log({ event: 'CONNECTION_RESPONSE', payload });
 
         const peer = peersRef.current[payload.key];
         if (!peer) return;
@@ -358,6 +355,7 @@ function useRoomChannel(
       },
     );
 
+    // handle the chat messages
     channelRef.current.on(
       'broadcast',
       { event: broadcastEvents.CHAT_MESSAGE },
@@ -369,28 +367,34 @@ function useRoomChannel(
       },
     );
 
+    // remove the user from the participants list when the user leaves
     channelRef.current.on(
       'broadcast',
       { event: broadcastEvents.LEAVE },
       ({ payload }: LeaveEventPayload) => {
         if (!payload) return;
 
-        const userIndex = participantsRef.current.indexOf(payload.key);
+        const userIndex = participantsRef.current.indexOf(payload.id);
         if (userIndex === -1) return;
 
         participantsRef.current.splice(userIndex, 1);
       },
     );
 
+    // subscribe to the channel
     channelRef.current.subscribe(async status => {
       if (status !== 'SUBSCRIBED') return;
 
-      updateUserState('ready');
+      const isFull = Object.keys(getPresenceState()).length >= 150;
+      if (isFull) return updateUserState('full');
+
+      updateUserState(curr => (curr === 'joined' ? 'joined' : 'ready'));
 
       presenceKey.current = key;
     });
   }, [user]);
 
+  // create a peer connection with each user that has joined the meeting
   const createPeerSignals = React.useCallback(
     () =>
       new Promise<RequestSignals>(resolve => {
@@ -421,6 +425,7 @@ function useRoomChannel(
     [],
   );
 
+  // add all the necessary events to the peer connection
   const addPeerEvents = React.useCallback(
     (key: string, peer: Peer.Instance, signal: ConnectionSignal, isInitiator: boolean) => {
       const presence = getPresenceState()[key]?.[0];
@@ -449,11 +454,16 @@ function useRoomChannel(
       peer.on('data', async (data: string) => {
         const message: PeerMessageData = JSON.parse(data);
 
-        if (message.type === 'mute') {
+        const audioTrack = getMediaTracks(streamRef.current).audio;
+
+        if (audioTrack && message.type === 'mute') {
+          audioTrack.enabled = false;
+          await track();
+
           setIsMuted(true);
-        } else if (message.type === 'unmute') {
-          const track = getMediaTracks(streamRef.current).audio;
-          if (track) track.enabled = true;
+        } else if (audioTrack && message.type === 'unmute') {
+          audioTrack.enabled = true;
+          await track();
 
           setIsMuted(false);
         } else if (message.type === 'leave') {
@@ -478,7 +488,7 @@ function useRoomChannel(
         addNewUser();
       }
 
-      participantsRef.current.push(key);
+      participantsRef.current.push(presence.user.id);
     },
     [],
   );
@@ -513,12 +523,16 @@ function useRoomChannel(
     if (!peer) return;
 
     peer.send(JSON.stringify({ type: 'leave' } satisfies PeerMessageData));
-    rejectedUsersRef.current.push(key);
+
+    const user = getPresenceState()[key]?.[0]?.user;
+    if (user) rejectedUsersRef.current.push(user.id);
   }, []);
 
   React.useEffect(() => {
     streamRef.current = stream;
   }, [stream]);
+
+  const [speaker, setSpeaker] = React.useState<MeetingUser>();
 
   return {
     channelRef,
@@ -529,6 +543,8 @@ function useRoomChannel(
     host: roomHost,
     mutedUsers,
     isMuted,
+    speaker,
+    setSpeaker,
     connectToChannel,
     track,
     leaveChannel,

@@ -2,6 +2,7 @@
 
 import React from 'react';
 import Link from 'next/link';
+import { useMediaQuery } from 'react-pre-hooks';
 import { useSession } from '~/components/session-provider';
 import { useMeetingRoom } from './meeting-room-provider';
 
@@ -17,10 +18,12 @@ import {
   RemoveIcon,
   MicOffIcon,
   MicOnIcon,
+  SearchIcon,
 } from '~/components/icons';
 import { CheckCheck as DoubleCheckIcon } from 'lucide-react';
 import { UserAvatar } from '~/components/user-avatar';
 import { Textarea } from '~/components/ui/textarea';
+import { Input } from '~/components/ui/input';
 
 import {
   DropdownMenu,
@@ -29,20 +32,22 @@ import {
   DropdownMenuTrigger,
 } from '~/components/ui/dropdown-menu';
 
-import { UserMeetingInstant } from './user-meeting-instant';
+import { Sheet, SheetContent } from '~/components/ui/sheet';
+
 import { WarningPage } from './waning-page';
-import { cn } from '~/lib/utils';
+import { UserMeetingInstant } from './user-meeting-instant';
+import { cn, getTimeString } from '~/lib/utils';
 
 import type { ChatMessage, MeetingUser } from '~/types';
 
 import {
-  MediaStreamSettingsMenu,
+  SettingsMenu,
   MeiaStateToggle,
   ChatToggle,
   ParticipantsToggle,
   HangUpButton,
   ShareScreenButton,
-} from './media-stream-controls';
+} from './meeting-room-controls';
 
 export function MeetingRoom() {
   const { state } = useMeetingRoom();
@@ -86,7 +91,7 @@ function GettingReady() {
   }, [user]);
 
   return (
-    <div className="grid w-full max-w-lg gap-4">
+    <div className="grid w-full max-w-lg gap-4 px-4">
       <div className="grid grid-cols-2 gap-4">
         <Button variant="secondary" asChild>
           <Link
@@ -108,42 +113,113 @@ function GettingReady() {
         presenceKey={room.presenceKey.current}
         info={user!}
         stream={userMedia.stream}
+        className="aspect-[3/2]"
       />
       <div className="flex w-full items-center justify-between">
         <div className="flex w-fit gap-4">
           <MeiaStateToggle kind="audio" />
           <MeiaStateToggle kind="video" />
         </div>
-        <MediaStreamSettingsMenu />
+        <SettingsMenu />
       </div>
     </div>
   );
 }
 
 function Room() {
-  const currentUser = useSession().user!;
-  const { userMedia, room } = useMeetingRoom();
+  const userInfo = useSession().user!;
+  const { userMedia, room, code } = useMeetingRoom();
+
   const [sidebarContentType, setSidebarContentType] = React.useState<'chat' | 'participants'>();
   const lastType = React.useRef<typeof sidebarContentType>();
 
+  const displayedUsers = React.useMemo(() => {
+    let allUsers = room.joinedUsers.filter(user => user.presenceKey !== room.speaker?.presenceKey);
+
+    if (room.host && room.host.presenceKey !== room.presenceKey.current) {
+      allUsers.unshift({
+        info: userInfo,
+        stream: userMedia.stream,
+        presenceKey: room.presenceKey.current,
+      });
+    }
+
+    if (room.speaker && room.speaker.presenceKey !== room.presenceKey.current) {
+      allUsers.unshift(room.speaker);
+    }
+
+    allUsers = allUsers.filter(user => user.presenceKey !== room.host?.presenceKey);
+
+    const length = allUsers.length;
+    const count = length <= 3 ? length : length === 4 ? 4 : length === 5 ? 3 : length === 6 ? 6 : 5;
+
+    return {
+      count: length,
+      main: allUsers.slice(0, count),
+      others: allUsers.slice(count, count + 3),
+    };
+  }, [room.joinedUsers, room.speaker, room.host, code]);
+
+  const gridLayout = React.useMemo(() => {
+    const count = displayedUsers.main.length + +!!displayedUsers.others.length;
+
+    if (count <= 3) return { cols: 2, rows: count === 1 ? 6 : 5 - count };
+    if (count < 6) return { cols: 1, rows: 3 };
+    return { cols: 1, rows: 2 };
+  }, [displayedUsers.main]);
+
   return (
     <div className="flex size-full flex-col">
-      <div className="flex flex-1 items-center">
-        <div className="flex flex-1 flex-wrap justify-center gap-2 px-10 transition-all duration-200 *:w-[calc(100vw-2*theme(padding.12))] *:max-w-md">
-          <UserMeetingInstant
-            key={currentUser.id}
-            presenceKey={room.presenceKey.current}
-            info={currentUser}
-            stream={userMedia.stream}
-          />
-          {room.joinedUsers.map(user => (
+      <div className="relative flex flex-1">
+        <div className="flex flex-1 items-center">
+          <div
+            style={
+              {
+                '--span-x': `span ${gridLayout.cols}`,
+                '--span-y': `span ${gridLayout.rows}`,
+              } as any
+            }
+            className="mx-auto grid size-full w-full grid-flow-col grid-cols-4 grid-rows-6 flex-wrap gap-[--room-gap] px-[--room-gap] portrait:grid-cols-6 portrait:grid-rows-4 landscape:xl:max-w-[85dvw]"
+          >
             <UserMeetingInstant
-              key={user.info.id}
-              presenceKey={user.presenceKey}
-              info={user.info}
-              stream={user.stream}
+              key={room.host?.presenceKey ?? room.presenceKey.current}
+              presenceKey={room.host?.presenceKey ?? room.presenceKey.current}
+              info={room.host?.info ?? userInfo}
+              stream={room.host ? room.host.stream : userMedia.stream}
+              className={cn(
+                'col-span-2 row-span-full',
+                displayedUsers.main.length
+                  ? 'portrait:col-span-full portrait:row-span-2'
+                  : 'col-span-full',
+              )}
             />
-          ))}
+            {displayedUsers.main.map(user => (
+              <UserMeetingInstant
+                key={user.presenceKey}
+                presenceKey={user.presenceKey}
+                info={user.info}
+                stream={user.stream}
+                className="[grid-column:var(--span-x)] [grid-row:var(--span-y)] portrait:[grid-column:var(--span-y)] portrait:[grid-row:var(--span-x)]"
+              />
+            ))}
+            {displayedUsers.others.length > 0 && (
+              <div className="content-center rounded-lg bg-muted [grid-column:var(--span-x)] [grid-row:var(--span-y)] portrait:[grid-column:var(--span-y)] portrait:[grid-row:var(--span-x)]">
+                <div className="flex justify-center -space-x-4">
+                  {displayedUsers.others.map(user => (
+                    <UserAvatar
+                      key={user.info.id}
+                      user={user.info}
+                      className="w-1/3 max-w-[63px]"
+                      size={120}
+                    />
+                  ))}
+                </div>
+                <span className="mt-4 block text-center text-sm">
+                  {displayedUsers.count - displayedUsers.main.length} more
+                </span>
+              </div>
+            )}
+          </div>
         </div>
         <Sidebar
           title={lastType.current === 'chat' ? 'Chat messages' : 'People'}
@@ -157,7 +233,7 @@ function Room() {
           )}
         </Sidebar>
       </div>
-      <div className="flex w-full flex-grow-0 items-center justify-center gap-4 py-4">
+      <div className="flex w-full flex-grow-0 items-center justify-center gap-4 px-2 py-4 max-sm:gap-2 max-sm:py-2 max-sm:*:size-10 max-sm:[&_svg]:size-5">
         <MeiaStateToggle kind="audio" />
         <MeiaStateToggle kind="video" />
         <ChatToggle
@@ -175,8 +251,8 @@ function Room() {
           }}
         />
         <ShareScreenButton />
-        <MediaStreamSettingsMenu />
-        <HangUpButton />
+        <SettingsMenu />
+        <HangUpButton className="max-sm:p-0" />
       </div>
     </div>
   );
@@ -189,12 +265,27 @@ type SidebarProps = React.PropsWithChildren<{
 }>;
 
 function Sidebar({ children, title, isOpen, onClose }: SidebarProps) {
+  const isMobileSize = useMediaQuery('(max-width: 940px)');
+
+  if (isMobileSize) {
+    return (
+      <Sheet open={isOpen} onOpenChange={opened => !opened && onClose?.()}>
+        <SheetContent side="right" className="w-full max-w-sm px-3 pt-3">
+          <div className="flex size-full flex-col">
+            <span className="block border-b pb-3 text-lg font-bold">{title}</span>
+            {children}
+          </div>
+        </SheetContent>
+      </Sheet>
+    );
+  }
+
   return (
     <div
       className={cn(
         '[--width:400px]',
         'relative grid min-h-full w-0 overflow-hidden transition-all duration-200',
-        isOpen && 'w-[calc(var(--width)+theme(padding.2))]',
+        isOpen && 'w-[calc(var(--width)+var(--room-gap))]',
       )}
     >
       <div className="light absolute inset-0 min-h-full w-[--width] rounded-lg bg-background px-4 text-foreground">
@@ -217,17 +308,19 @@ function ChatMessages() {
 
   return (
     <>
-      <div className="flex-1 overflow-auto py-4 pr-2">
+      <div id="chat-box" className="flex-1 overflow-auto py-4 pr-2">
         {room.chatMessages.length ? (
-          room.chatMessages.array.map((message, index, arr) => {
-            const prev = arr[index - 1];
-            const isSameMessage =
-              prev &&
-              message.id === prev.id &&
-              Math.abs(message.timestamp - prev.timestamp) < 60 * 1000;
+          <div className="flex min-h-full w-full flex-col justify-end">
+            {room.chatMessages.array.map((message, index, arr) => {
+              const prev = arr[index - 1];
+              const isSameMessage =
+                prev &&
+                message.id === prev.id &&
+                Math.abs(message.timestamp - prev.timestamp) < 60 * 1000;
 
-            return <ChatItem key={index} messageOnly={isSameMessage} {...message} />;
-          })
+              return <ChatItem key={index} messageOnly={isSameMessage} {...message} />;
+            })}
+          </div>
         ) : (
           <div className="text-center text-sm text-muted-foreground">No messages yet.</div>
         )}
@@ -258,6 +351,12 @@ function ChatInput() {
 
     inputRef.current.value = '';
     inputRef.current.dispatchEvent(new Event('input'));
+    inputRef.current.focus();
+
+    setTimeout(() => {
+      const chatBox = document.getElementById('chat-box') as HTMLDivElement;
+      chatBox.scrollTo({ top: chatBox.scrollHeight });
+    }, 0);
   }, []);
 
   return (
@@ -271,13 +370,7 @@ function ChatInput() {
 }
 
 function ChatItem(props: ChatMessage & { messageOnly?: boolean }) {
-  const time = React.useMemo(() => {
-    const date = new Date(props.timestamp);
-    const hours = date.getHours().toString().padStart(2, '0');
-    const minutes = date.getMinutes().toString().padStart(2, '0');
-
-    return `${hours}:${minutes}`;
-  }, []);
+  const time = React.useMemo(() => getTimeString(new Date(props.timestamp)), []);
 
   if (props.messageOnly) {
     return (
@@ -306,11 +399,35 @@ function ChatItem(props: ChatMessage & { messageOnly?: boolean }) {
 }
 
 function Participants() {
+  const userInfo = useSession().user!;
   const { room, code } = useMeetingRoom();
+  const [name, setName] = React.useState('');
+
+  const waitingUsers = React.useMemo(() => {
+    if (!name) return room.waitingUsers;
+    return room.waitingUsers.filter(user =>
+      user.info.name.toLowerCase().includes(name.toLowerCase()),
+    );
+  }, [name, room.waitingUsers]);
+
+  const joinedUsers = React.useMemo(() => {
+    if (!name) return room.joinedUsers;
+    return room.joinedUsers.filter(user =>
+      user.info.name.toLowerCase().includes(name.toLowerCase()),
+    );
+  }, [name, room.joinedUsers]);
 
   return (
     <div className="flex-1 overflow-auto py-4 pr-2">
-      {room.waitingUsers.length > 0 && (
+      <div className="relative mb-8 w-full">
+        <Input
+          placeholder="Search by name"
+          className="w-full pl-9 focus-visible:ring-transparent"
+          onChange={e => setName(e.target.value)}
+        />
+        <SearchIcon className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+      </div>
+      {waitingUsers.length > 0 && (
         <div className="mb-8">
           <div className="mb-4 flex items-center justify-between">
             <span className="text-sm font-bold text-muted-foreground">Waiting</span>
@@ -326,7 +443,7 @@ function Participants() {
                     className="block w-full"
                     onClick={() => {
                       room.sendJoinResponse({
-                        keys: room.waitingUsers.map(user => user.presenceKey),
+                        keys: waitingUsers.map(user => user.presenceKey),
                         status: 'ACCEPTED',
                       });
                     }}
@@ -339,7 +456,7 @@ function Participants() {
                     className="block w-full"
                     onClick={() => {
                       room.sendJoinResponse({
-                        keys: room.waitingUsers.map(user => user.presenceKey),
+                        keys: waitingUsers.map(user => user.presenceKey),
                         status: 'REJECTED',
                       });
                     }}
@@ -351,7 +468,7 @@ function Participants() {
             </DropdownMenu>
           </div>
           <div className="grid gap-4">
-            {room.waitingUsers.map(user => (
+            {waitingUsers.map(user => (
               <ParticipantItem
                 key={user.presenceKey}
                 presenceKey={user.presenceKey}
@@ -365,14 +482,15 @@ function Participants() {
       <div className="mb-4 flex items-center justify-between">
         <span className="block text-sm font-bold text-muted-foreground">In-call</span>
         <div className="rounded-full border px-3.5 py-2 text-sm font-semibold">
-          {room.joinedUsers.length + 1}
+          {joinedUsers.length + 1}
         </div>
       </div>
       <div className="grid gap-4">
-        {room.host && (
-          <ParticipantItem user={room.host.info} presenceKey={room.presenceKey.current} />
-        )}
-        {room.joinedUsers.map(user =>
+        <ParticipantItem
+          user={room.host?.info ?? userInfo}
+          presenceKey={room.host?.presenceKey ?? room.presenceKey.current}
+        />
+        {joinedUsers.map(user =>
           user.info.roomCode === code ? null : (
             <ParticipantItem
               key={user.presenceKey}
@@ -434,11 +552,11 @@ function ParticipantItem(props: ParticipantItemProps) {
                 >
                   {isMuted ? (
                     <>
-                      <MicOffIcon className="mr-2 size-4" /> Turn of the micrphone
+                      <MicOnIcon className="mr-2 size-4" /> Turn on the microphone
                     </>
                   ) : (
                     <>
-                      <MicOnIcon className="mr-2 size-4" /> Turn on the microphone
+                      <MicOffIcon className="mr-2 size-4" /> Turn off the micrphone
                     </>
                   )}
                 </button>

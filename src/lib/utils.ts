@@ -30,6 +30,10 @@ export function getMediaTracks(stream: MediaStream | null) {
   };
 }
 
+export function getTimeString(time: Date) {
+  return time.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false });
+}
+
 export function createPeerInstance(stream: MediaStream | null, initiator = false) {
   return new Peer({ initiator, trickle: false, stream: stream ?? undefined });
 }

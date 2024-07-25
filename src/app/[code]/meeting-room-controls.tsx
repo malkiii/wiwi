@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { useRouter } from 'next/navigation';
-import { useForceUpdate } from 'react-pre-hooks';
+import { useForceUpdate, useMediaQuery } from 'react-pre-hooks';
 import { useMeetingRoom } from './meeting-room-provider';
 import { cn, getMediaTracks } from '~/lib/utils';
 
@@ -73,7 +73,7 @@ export function MeiaStateToggle({ kind, className, ...props }: MeiaStateTogglePr
       disabled={!hasPermission || room.isMuted}
       onClick={async () => {
         const track = getMediaTracks(userMedia.stream)[kind];
-        if (!track) return;
+        if (!track || room.isMuted) return;
 
         track.enabled = !track.enabled;
         await room.track();
@@ -86,7 +86,7 @@ export function MeiaStateToggle({ kind, className, ...props }: MeiaStateTogglePr
   );
 }
 
-export function MediaStreamSettingsMenu({ className, ...props }: ButtonProps) {
+export function SettingsMenu({ className, ...props }: ButtonProps) {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -167,10 +167,13 @@ export function HangUpButton({ className, ...props }: ButtonProps) {
 }
 
 export function ShareScreenButton({ className, ...props }: ButtonProps) {
+  const isDesktop = useMediaQuery('(hover: hover)');
+
   return (
     <Button
       {...props}
       variant="secondary"
+      disabled={!isDesktop}
       className={cn('aspect-square size-12 rounded-full p-0', className)}
     >
       <ScreenShareIcon className="size-6" />

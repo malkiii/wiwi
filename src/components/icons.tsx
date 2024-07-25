@@ -32,6 +32,7 @@ export {
   Users as UsersIcon,
   SendHorizontal as SendIcon,
   CircleMinus as RemoveIcon,
+  Search as SearchIcon,
   X,
 } from 'lucide-react';
 

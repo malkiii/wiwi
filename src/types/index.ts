@@ -66,10 +66,7 @@ export type ChatMessage = {
 
 export type ChatMessagePayload = Payload<ChatMessage>;
 
-export type LeaveEventPayload = Payload<{
-  key: string;
-  name: string;
-}>;
+export type LeaveEventPayload = Payload<{ id: string }>;
 
 export type PeerMessageData = {
   type: 'mute' | 'unmute' | 'leave';
