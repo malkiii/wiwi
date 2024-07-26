@@ -78,8 +78,8 @@ dependencies:
     specifier: ^7.51.5
     version: 7.51.5(react@18.3.1)
   react-pre-hooks:
-    specifier: ^3.1.3
-    version: 3.1.3(react-dom@18.3.1)(react@18.3.1)
+    specifier: ^3.1.4
+    version: 3.1.4(react-dom@18.3.1)(react@18.3.1)
   simple-peer:
     specifier: ^9.11.1
     version: 9.11.1
@@ -4516,8 +4516,8 @@ packages:
     resolution: {integrity: sha512-24e6ynE2H+OKt4kqsOvNd8kBpV65zoxbA4BVsEOB3ARVWQki/DHzaUoC5KuON/BiccDaCCTZBuOcfZs70kR8bQ==}
     dev: true
 
-  /react-pre-hooks@3.1.3(react-dom@18.3.1)(react@18.3.1):
-    resolution: {integrity: sha512-M0gi05POeAe27hJmRjGXOHxSi+OwZy8K5V6aBk0mW4ySgaC3WEvWWwly1vdA4sEJjt9uSis7mJWq8l+RblJ9rA==}
+  /react-pre-hooks@3.1.4(react-dom@18.3.1)(react@18.3.1):
+    resolution: {integrity: sha512-Bi5IIlaE2cTPO2u/LzyaEZv19RTVNmrZ7raMTHVvgHmVFP+o6ZsStYfCMfRDO/MGCji3x7pAWRDW5/rbLl20aA==}
     peerDependencies:
       react: '>=18.2.0'
       react-dom: '>=18.2.0'

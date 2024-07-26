@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { useRouter } from 'next/navigation';
-import { useForceUpdate, useMediaQuery } from 'react-pre-hooks';
+import { useForceUpdate, useMediaQuery, useScreenCapture } from 'react-pre-hooks';
 import { useMeetingRoom } from './meeting-room-provider';
 import { cn, getMediaTracks } from '~/lib/utils';
 
@@ -76,9 +76,9 @@ export function MeiaStateToggle({ kind, className, ...props }: MeiaStateTogglePr
         if (!track || room.isMuted) return;
 
         track.enabled = !track.enabled;
-        await room.track();
-
         rerender();
+
+        await room.track();
       }}
     >
       <Icon className="size-6" />
@@ -121,13 +121,20 @@ export function ChatToggle({ className, onClick, ...props }: ButtonProps) {
   const { room } = useMeetingRoom();
   const [readMessages, setReadMessages] = React.useState(room.chatMessages.length);
 
+  const updateMessagesNumber = () => setReadMessages(room.chatMessages.length);
+
+  React.useEffect(() => {
+    if (props.variant === 'secondary') return;
+    updateMessagesNumber();
+  }, [room.chatMessages.length]);
+
   return (
     <Button
       {...props}
       className={cn('relative aspect-square size-12 rounded-full p-0', className)}
       onClick={e => {
         onClick?.(e);
-        setReadMessages(room.chatMessages.length);
+        updateMessagesNumber();
       }}
     >
       <ChatIcon className="size-6" />
@@ -167,14 +174,28 @@ export function HangUpButton({ className, ...props }: ButtonProps) {
 }
 
 export function ShareScreenButton({ className, ...props }: ButtonProps) {
+  const { room } = useMeetingRoom();
   const isDesktop = useMediaQuery('(hover: hover)');
+
+  const screenCapture = useScreenCapture({ video: true, audio: true });
+
+  const isPresenting = room.presenter?.key === room.presenceKey.current;
 
   return (
     <Button
       {...props}
-      variant="secondary"
-      disabled={!isDesktop}
+      variant={isPresenting ? 'default' : 'secondary'}
+      disabled={!isDesktop || (room.presenter && !isPresenting)}
       className={cn('aspect-square size-12 rounded-full p-0', className)}
+      onClick={async () => {
+        if (isPresenting) {
+          screenCapture.stop();
+          return await room.stopScreenSharing();
+        } else {
+          const stream = await screenCapture.start();
+          room.startScreenSharing(stream);
+        }
+      }}
     >
       <ScreenShareIcon className="size-6" />
     </Button>

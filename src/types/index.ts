@@ -24,6 +24,11 @@ export type PresenceStateValue = {
   state: MediaState;
 };
 
+export type ScreenSharePresenceState = {
+  user: User;
+  signal: Peer.SignalData;
+};
+
 export type Payload<T = Record<string, string>> = {
   type: string;
   event: string;
@@ -68,6 +73,11 @@ export type ChatMessagePayload = Payload<ChatMessage>;
 
 export type LeaveEventPayload = Payload<{ id: string }>;
 
-export type PeerMessageData = {
-  type: 'mute' | 'unmute' | 'leave';
-};
+export type PeerMessageData =
+  | {
+      type: 'mute' | 'unmute' | 'leave';
+    }
+  | {
+      type: 'signal';
+      data: Peer.SignalData;
+    };

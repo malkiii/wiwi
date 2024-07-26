@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useMediaQuery } from 'react-pre-hooks';
 import { useSession } from '~/components/session-provider';
 import { useMeetingRoom } from './meeting-room-provider';
+import { MediaStreamVideo } from '~/components/media-stream-video';
 
 import { Button } from '~/components/ui/button';
 import { LoadingAnimation } from '~/components/loading-animation';
@@ -136,37 +137,58 @@ function Room() {
   const displayedUsers = React.useMemo(() => {
     let allUsers = room.joinedUsers.filter(user => user.presenceKey !== room.speaker?.presenceKey);
 
-    if (room.host && room.host.presenceKey !== room.presenceKey.current) {
-      allUsers.unshift({
-        info: userInfo,
-        stream: userMedia.stream,
-        presenceKey: room.presenceKey.current,
-      });
-    }
+    const currentUser: MeetingUser = {
+      info: userInfo,
+      stream: userMedia.stream,
+      presenceKey: room.presenceKey.current,
+    };
 
-    if (room.speaker && room.speaker.presenceKey !== room.presenceKey.current) {
-      allUsers.unshift(room.speaker);
-    }
+    let mainUser: MeetingUser | undefined;
 
-    allUsers = allUsers.filter(user => user.presenceKey !== room.host?.presenceKey);
+    if (room.presenter) {
+      mainUser = undefined;
+      allUsers.unshift(currentUser);
+
+      if (room.speaker) allUsers.unshift(room.speaker);
+    } else if (room.speaker) {
+      if (room.speaker.info.id === currentUser.info.id) {
+        mainUser = currentUser;
+        allUsers.unshift(room.speaker);
+      } else {
+        mainUser = room.speaker;
+        allUsers.unshift(currentUser);
+      }
+    } else {
+      mainUser = currentUser;
+    }
 
     const length = allUsers.length;
     const count = length <= 3 ? length : length === 4 ? 4 : length === 5 ? 3 : length === 6 ? 6 : 5;
 
     return {
       count: length,
-      main: allUsers.slice(0, count),
+      main: mainUser,
+      side: allUsers.slice(0, count),
       others: allUsers.slice(count, count + 3),
     };
-  }, [room.joinedUsers, room.speaker, room.host, code]);
+  }, [room.joinedUsers, room.host, room.speaker, room.presenter, code]);
 
   const gridLayout = React.useMemo(() => {
-    const count = displayedUsers.main.length + +!!displayedUsers.others.length;
+    const count = displayedUsers.side.length + +!!displayedUsers.others.length;
 
     if (count <= 3) return { cols: 2, rows: count === 1 ? 6 : 5 - count };
     if (count < 6) return { cols: 1, rows: 3 };
     return { cols: 1, rows: 2 };
-  }, [displayedUsers.main]);
+  }, [displayedUsers]);
+
+  const mainViewClasses = React.useMemo(
+    () =>
+      cn(
+        'col-span-2 row-span-full',
+        displayedUsers.side.length ? 'portrait:col-span-full portrait:row-span-2' : 'col-span-full',
+      ),
+    [displayedUsers.side],
+  );
 
   return (
     <div className="flex size-full flex-col">
@@ -181,19 +203,18 @@ function Room() {
             }
             className="mx-auto grid size-full w-full grid-flow-col grid-cols-4 grid-rows-6 flex-wrap gap-[--room-gap] px-[--room-gap] portrait:grid-cols-6 portrait:grid-rows-4 landscape:xl:max-w-[85dvw]"
           >
-            <UserMeetingInstant
-              key={room.host?.presenceKey ?? room.presenceKey.current}
-              presenceKey={room.host?.presenceKey ?? room.presenceKey.current}
-              info={room.host?.info ?? userInfo}
-              stream={room.host ? room.host.stream : userMedia.stream}
-              className={cn(
-                'col-span-2 row-span-full',
-                displayedUsers.main.length
-                  ? 'portrait:col-span-full portrait:row-span-2'
-                  : 'col-span-full',
-              )}
-            />
-            {displayedUsers.main.map(user => (
+            {displayedUsers.main ? (
+              <UserMeetingInstant
+                key={displayedUsers.main.presenceKey}
+                presenceKey={displayedUsers.main.presenceKey}
+                info={displayedUsers.main.info}
+                stream={displayedUsers.main.stream}
+                className={mainViewClasses}
+              />
+            ) : (
+              <ScreenInstant className={mainViewClasses} />
+            )}
+            {displayedUsers.side.map(user => (
               <UserMeetingInstant
                 key={user.presenceKey}
                 presenceKey={user.presenceKey}
@@ -215,7 +236,7 @@ function Room() {
                   ))}
                 </div>
                 <span className="mt-4 block text-center text-sm">
-                  {displayedUsers.count - displayedUsers.main.length} more
+                  {displayedUsers.count - displayedUsers.side.length} more
                 </span>
               </div>
             )}
@@ -254,6 +275,35 @@ function Room() {
         <SettingsMenu />
         <HangUpButton className="max-sm:p-0" />
       </div>
+    </div>
+  );
+}
+
+type ScreenInstantProps = React.ComponentProps<'div'>;
+
+function ScreenInstant({ className, ...props }: ScreenInstantProps) {
+  const { room } = useMeetingRoom();
+
+  const isPresenting = room.presenter?.key === room.presenceKey.current;
+  const presenterFirstName = room.presenter?.info.name.split(' ')[0];
+
+  return (
+    <div
+      {...props}
+      className={cn('relative flex items-center justify-center rounded-lg bg-muted', className)}
+    >
+      {room.screenStream ? (
+        <MediaStreamVideo
+          stream={room.screenStream}
+          muted={isPresenting}
+          className="absolute left-0 top-0 h-full w-full object-contain"
+        />
+      ) : (
+        <LoadingAnimation className="w-20" />
+      )}
+      <span className="absolute bottom-0 left-0 z-30 block w-full overflow-hidden text-ellipsis whitespace-nowrap px-2 py-1 text-xs sm:px-3 sm:py-2 sm:text-sm">
+        {presenterFirstName} is presenting.
+      </span>
     </div>
   );
 }

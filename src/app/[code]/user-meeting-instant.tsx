@@ -8,6 +8,8 @@ import { MicOffIcon } from '~/components/icons';
 import { useAudioAnalyser, useDebouncedState } from 'react-pre-hooks';
 import { UserAvatar } from '~/components/user-avatar';
 import { useMeetingRoom } from './meeting-room-provider';
+import { useSession } from '~/components/session-provider';
+import { MediaStreamVideo } from '~/components/media-stream-video';
 
 type UserMeetingInstantProps = React.ComponentPropsWithoutRef<'video'> & MeetingUser;
 
@@ -18,21 +20,19 @@ export function UserMeetingInstant({
   className,
   ...props
 }: UserMeetingInstantProps) {
-  const { room } = useMeetingRoom();
-  const userVideoRef = React.useRef<HTMLVideoElement>(null);
+  const user = useSession().user!;
+  const { room, code } = useMeetingRoom();
+
+  const isHost = user.roomCode === code;
   const isUserInstant = room.presenceKey.current === presenceKey;
 
   const { isSpeaking, isMuted, isVideoEnabled } = useMediaState(stream);
   const [orientation, setOrientation] = React.useState<'landscape' | 'portrait'>('landscape');
 
   React.useEffect(() => {
-    if (!userVideoRef.current) return;
-
-    userVideoRef.current.srcObject = stream;
-  }, [stream]);
-
-  React.useEffect(() => {
     if (!isSpeaking) return;
+
+    if (isUserInstant) return room.setSpeaker(undefined);
 
     room.setSpeaker(curr => {
       if (curr?.presenceKey === presenceKey) return curr;
@@ -53,12 +53,9 @@ export function UserMeetingInstant({
         size={240}
         className="z-10 aspect-square w-1/2 max-w-[120px] text-xl"
       />
-      <video
-        {...props}
-        ref={userVideoRef}
+      <MediaStreamVideo
+        stream={stream}
         muted={isUserInstant}
-        autoPlay
-        playsInline
         onLoadedMetadataCapture={e => {
           const { videoWidth, videoHeight } = e.currentTarget;
           setOrientation(videoWidth > videoHeight ? 'landscape' : 'portrait');
@@ -69,6 +66,7 @@ export function UserMeetingInstant({
           !isVideoEnabled && 'invisible opacity-0',
           isUserInstant && '-scale-x-100',
         )}
+        {...props}
       />
       {isMuted && (
         <span className="absolute left-2 top-2 z-30 block aspect-square w-[25%] max-w-8 rounded-full bg-background/50 p-2 sm:left-3 sm:top-3">
@@ -81,8 +79,8 @@ export function UserMeetingInstant({
           className="absolute right-2 top-2 z-30 w-[8%] max-w-8 sm:right-3 sm:top-3"
         />
       )}
-      <span className="absolute bottom-2 left-2 z-30 block text-xs sm:bottom-3 sm:left-3 sm:text-sm">
-        {isUserInstant ? 'You' : info.name}
+      <span className="absolute bottom-0 left-0 z-30 block w-full overflow-hidden text-ellipsis whitespace-nowrap px-2 py-1 text-xs sm:px-3 sm:py-2 sm:text-sm">
+        {isUserInstant ? 'You' : info.name + (isHost ? ' (Host)' : '')}
       </span>
     </div>
   );

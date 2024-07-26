@@ -22,6 +22,7 @@ import type {
   ChatMessagePayload,
   LeaveEventPayload,
   PeerMessageData,
+  ScreenSharePresenceState,
 } from '~/types';
 
 type MeetingRoomContextData = {
@@ -119,6 +120,13 @@ function useRoomChannel(
   const streamRef = React.useRef(stream);
   const channelRef = React.useRef<RealtimeChannel>();
 
+  // the screen sharing states
+  const [screenStream, setScreenStream] = React.useState<MediaStream | null>(null);
+  const [presenter, setPresenter] = React.useState<{ key: string; info: MeetingUser['info'] }>();
+  const screenChannelRef = React.useRef<RealtimeChannel>();
+  const screenPeer = React.useRef<Peer.Instance>();
+  const presenterKey = React.useRef<string>();
+
   // store the peer connections
   const peersRef = React.useRef<Record<string, Peer.Instance>>({});
 
@@ -170,8 +178,11 @@ function useRoomChannel(
     const peers = Object.values(peersRef.current);
     for (const peer of peers) peer.destroy();
 
-    // leave the channel
+    // leave all the channels
+    screenChannelRef.current && client.removeChannel(screenChannelRef.current);
     client.removeChannel(channelRef.current);
+
+    screenStream?.getTracks().forEach(t => t.stop());
     presenceKey.current = '';
   }, [stream]);
 
@@ -286,16 +297,22 @@ function useRoomChannel(
         if (hasJoined.current) return;
 
         hasJoined.current = true;
-        const signals = await createPeerSignals();
+        const isAlone = Object.keys(getPresenceState()).length === 1;
 
-        channelRef.current!.send({
-          type: 'broadcast',
-          event: broadcastEvents.CONNECTION_REQUEST,
-          payload: {
-            key: presenceKey.current,
-            signals,
-          } satisfies ConnectionRequestPayload['payload'],
-        });
+        if (isAlone) {
+          connectToScreenChannel();
+        } else {
+          const signals = await createPeerSignals();
+
+          channelRef.current!.send({
+            type: 'broadcast',
+            event: broadcastEvents.CONNECTION_REQUEST,
+            payload: {
+              key: presenceKey.current,
+              signals,
+            } satisfies ConnectionRequestPayload['payload'],
+          });
+        }
 
         updateUserState('joined');
       },
@@ -352,6 +369,8 @@ function useRoomChannel(
         addPeerEvents(payload.key, peer, payload.signal, true);
 
         peer.signal(payload.signal.data);
+
+        connectToScreenChannel();
       },
     );
 
@@ -393,6 +412,49 @@ function useRoomChannel(
       presenceKey.current = key;
     });
   }, [user]);
+
+  // connect to the screen sharing channel
+  const connectToScreenChannel = React.useCallback(() => {
+    if (screenChannelRef.current || !presenceKey.current) return;
+
+    screenChannelRef.current = client.channel(`screen:${code}`, {
+      config: {
+        presence: { key: presenceKey.current },
+      },
+    });
+
+    screenChannelRef.current.on('presence', { event: 'join' }, ({ key, newPresences }) => {
+      if (presenterKey.current) return;
+      presenterKey.current = key;
+
+      if (presenterKey.current === presenceKey.current) return;
+
+      const presence: ScreenSharePresenceState = newPresences[0]! as any;
+      setPresenter({ key, info: presence.user });
+
+      const peer = peersRef.current[key];
+      if (!peer) return;
+
+      const screenPeer = createPeerInstance(null);
+
+      screenPeer.on('signal', signal => {
+        peer.send(JSON.stringify({ type: 'signal', data: signal } satisfies PeerMessageData));
+      });
+
+      screenPeer.on('stream', stream => setScreenStream(stream));
+      screenPeer.signal(presence.signal);
+    });
+
+    screenChannelRef.current.on('presence', { event: 'leave' }, ({ key }) => {
+      if (presenterKey.current !== key) return;
+
+      presenterKey.current = undefined;
+      setPresenter(undefined);
+      setScreenStream(null);
+    });
+
+    screenChannelRef.current.subscribe();
+  }, [code]);
 
   // create a peer connection with each user that has joined the meeting
   const createPeerSignals = React.useCallback(
@@ -436,8 +498,7 @@ function useRoomChannel(
         if (!isInitiator) toast(`${presence.user.name} has joined the meeting!`);
       };
 
-      // remove user from the list if the user leaves
-      peer.on('close', () => {
+      const removeUser = () => {
         let userIndex = -1;
         joinedUsers.reset(arr => {
           userIndex = arr.findIndex(({ presenceKey }) => presenceKey === key);
@@ -448,9 +509,13 @@ function useRoomChannel(
 
         joinedUsers.pop(userIndex);
         toast(`${presence.user.name} has left.`);
-      });
+      };
 
-      // handle the host commands
+      // remove user from the list if the user leaves
+      peer.on('end', () => removeUser());
+      peer.on('close', () => removeUser());
+
+      // handle received data
       peer.on('data', async (data: string) => {
         const message: PeerMessageData = JSON.parse(data);
 
@@ -467,10 +532,14 @@ function useRoomChannel(
 
           setIsMuted(false);
         } else if (message.type === 'leave') {
-          leaveChannel();
           await hangUp();
+          leaveChannel();
+
+          hasJoined.current = false;
 
           updateUserState('rejected');
+        } else if (message.type === 'signal') {
+          screenPeer.current?.signal(message.data);
         }
       });
 
@@ -492,6 +561,38 @@ function useRoomChannel(
     },
     [],
   );
+
+  const startScreenSharing = React.useCallback(
+    (stream: MediaStream) => {
+      if (!screenChannelRef.current) return;
+      if (!hasJoined.current) return;
+
+      const isPresenterExists = () => !!presenterKey.current;
+      if (isPresenterExists()) return;
+
+      const track = stream.getVideoTracks()[0];
+      if (!track) return;
+
+      track.onended = () => stopScreenSharing();
+
+      const peer = createPeerInstance(stream, true);
+
+      peer.on('signal', async signal => {
+        if (isPresenterExists()) return;
+        await screenChannelRef.current!.track({ user, signal } satisfies ScreenSharePresenceState);
+      });
+
+      screenPeer.current = peer;
+      setScreenStream(stream);
+      setPresenter({ key: presenceKey.current, info: user });
+    },
+    [user],
+  );
+
+  const stopScreenSharing = React.useCallback(() => {
+    screenPeer.current = undefined;
+    return screenChannelRef.current?.untrack();
+  }, []);
 
   const sendChatMessage = React.useCallback((info: MeetingUser['info'], message: string) => {
     return channelRef.current?.send({
@@ -537,15 +638,20 @@ function useRoomChannel(
   return {
     channelRef,
     presenceKey,
+    presenterKey,
     joinedUsers: joinedUsers.array,
     waitingUsers: waitingUsers.array,
     chatMessages,
     host: roomHost,
-    mutedUsers,
-    isMuted,
+    presenter,
     speaker,
     setSpeaker,
+    mutedUsers,
+    isMuted,
+    screenStream,
     connectToChannel,
+    startScreenSharing,
+    stopScreenSharing,
     track,
     leaveChannel,
     getPresenceState,
