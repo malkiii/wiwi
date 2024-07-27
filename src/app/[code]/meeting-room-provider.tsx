@@ -508,6 +508,8 @@ function useRoomChannel(
         if (userIndex === -1) return;
 
         joinedUsers.pop(userIndex);
+        setSpeaker(curr => (curr?.presenceKey === key ? undefined : curr));
+
         toast(`${presence.user.name} has left.`);
       };
 

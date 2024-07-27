@@ -11,7 +11,16 @@ export function MediaStreamVideo({ stream, ...props }: MediaStreamVideoProps) {
     if (!videoRef.current) return;
 
     videoRef.current.srcObject = stream;
+    videoRef.current.play();
   }, [stream]);
 
-  return <video ref={videoRef} autoPlay playsInline {...props} />;
+  return (
+    <video
+      ref={videoRef}
+      autoPlay
+      playsInline
+      onCanPlay={() => videoRef.current?.play()}
+      {...props}
+    />
+  );
 }
