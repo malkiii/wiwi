@@ -7,11 +7,13 @@ export type MediaStreamVideoProps = React.ComponentPropsWithoutRef<'video'> & {
 export function MediaStreamVideo({ stream, ...props }: MediaStreamVideoProps) {
   const videoRef = React.useRef<HTMLVideoElement>(null);
 
+  const playVideo = React.useCallback(() => videoRef.current?.play(), []);
+
   React.useEffect(() => {
     if (!videoRef.current) return;
 
     videoRef.current.srcObject = stream;
-    videoRef.current.play();
+    playVideo();
   }, [stream]);
 
   return (
@@ -19,7 +21,9 @@ export function MediaStreamVideo({ stream, ...props }: MediaStreamVideoProps) {
       ref={videoRef}
       autoPlay
       playsInline
-      onCanPlay={() => videoRef.current?.play()}
+      onPause={playVideo}
+      onEnded={playVideo}
+      onLoadedData={playVideo}
       {...props}
     />
   );

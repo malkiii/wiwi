@@ -30,9 +30,7 @@ export function UserMeetingInstant({
   const [orientation, setOrientation] = React.useState<'landscape' | 'portrait'>('landscape');
 
   React.useEffect(() => {
-    if (!isSpeaking) return;
-
-    if (isUserInstant) return room.setSpeaker(undefined);
+    if (!isSpeaking || isUserInstant) return;
 
     room.setSpeaker(curr => {
       if (curr?.presenceKey === presenceKey) return curr;

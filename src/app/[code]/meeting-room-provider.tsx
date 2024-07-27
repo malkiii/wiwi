@@ -301,10 +301,11 @@ function useRoomChannel(
 
         if (isAlone) {
           connectToScreenChannel();
+          updateUserState('joined');
         } else {
           const signals = await createPeerSignals();
 
-          channelRef.current!.send({
+          await channelRef.current!.send({
             type: 'broadcast',
             event: broadcastEvents.CONNECTION_REQUEST,
             payload: {
@@ -313,8 +314,6 @@ function useRoomChannel(
             } satisfies ConnectionRequestPayload['payload'],
           });
         }
-
-        updateUserState('joined');
       },
     );
 
@@ -370,7 +369,10 @@ function useRoomChannel(
 
         peer.signal(payload.signal.data);
 
+        removeWaitingUser(payload.key);
         connectToScreenChannel();
+
+        updateUserState('joined');
       },
     );
 
@@ -471,6 +473,13 @@ function useRoomChannel(
 
         for (const key in presenceState) {
           if (presenceKey.current === key) continue;
+
+          const presenceUser = presenceState[key]![0]!.user;
+
+          // push the user to the waiting list until the user send a connection response
+          if (user.roomCode === code && user.id !== presenceUser.id) {
+            waitingUsers.push({ presenceKey: key, info: presenceUser, stream: null });
+          }
 
           const peer = createPeerInstance(streamRef.current, true);
 
