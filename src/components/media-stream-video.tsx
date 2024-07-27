@@ -12,7 +12,13 @@ export function MediaStreamVideo({ stream, ...props }: MediaStreamVideoProps) {
   React.useEffect(() => {
     if (!videoRef.current) return;
 
-    videoRef.current.srcObject = stream;
+    if ('srcObject' in videoRef.current) {
+      videoRef.current.srcObject = stream;
+    } else {
+      // @ts-ignore
+      videoRef.current.src = URL.createObjectURL(stream);
+    }
+
     playVideo();
   }, [stream]);
 
@@ -23,6 +29,8 @@ export function MediaStreamVideo({ stream, ...props }: MediaStreamVideoProps) {
       playsInline
       onPause={playVideo}
       onEnded={playVideo}
+      onError={playVideo}
+      onStalled={playVideo}
       onLoadedData={playVideo}
       {...props}
     />

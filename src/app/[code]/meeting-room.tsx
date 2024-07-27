@@ -205,7 +205,6 @@ function Room() {
           >
             {displayedUsers.main ? (
               <UserMeetingInstant
-                key={displayedUsers.main.presenceKey}
                 presenceKey={displayedUsers.main.presenceKey}
                 info={displayedUsers.main.info}
                 stream={displayedUsers.main.stream}

@@ -57,6 +57,7 @@ export function UserMeetingInstant({
         onLoadedMetadataCapture={e => {
           const { videoWidth, videoHeight } = e.currentTarget;
           setOrientation(videoWidth > videoHeight ? 'landscape' : 'portrait');
+          e.currentTarget.play();
         }}
         className={cn(
           'absolute inset-0 z-20 size-full object-cover',
