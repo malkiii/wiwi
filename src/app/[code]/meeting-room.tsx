@@ -579,10 +579,29 @@ function ParticipantItem(props: ParticipantItemProps) {
       <div className="flex items-center gap-2">
         {props.isWaiting ? (
           <>
-            <Button className="rounded-full" size="icon">
+            <Button
+              className="rounded-full"
+              size="icon"
+              onClick={() => {
+                room.sendJoinResponse({
+                  keys: [props.presenceKey],
+                  status: 'ACCEPTED',
+                });
+              }}
+            >
               <CheckIcon className="size-5" />
             </Button>
-            <Button variant="destructive" className="rounded-full" size="icon">
+            <Button
+              variant="destructive"
+              className="rounded-full"
+              size="icon"
+              onClick={() => {
+                room.sendJoinResponse({
+                  keys: [props.presenceKey],
+                  status: 'REJECTED',
+                });
+              }}
+            >
               <X className="size-5" />
             </Button>
           </>

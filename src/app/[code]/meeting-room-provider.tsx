@@ -163,13 +163,18 @@ function useRoomChannel(
     return channelRef.current?.track({ user, state } satisfies PresenceStateValue);
   }, [user]);
 
-  const sendJoinResponse = React.useCallback((payload: JoinResponsePayload['payload']) => {
-    return channelRef.current?.send({
-      type: 'broadcast',
-      event: broadcastEvents.JOIN_RESPONSE,
-      payload,
-    });
-  }, []);
+  const sendJoinResponse = React.useCallback(
+    (payload: NonNullable<JoinResponsePayload['payload']>) => {
+      removeWaitingUser(payload.keys);
+
+      return channelRef.current?.send({
+        type: 'broadcast',
+        event: broadcastEvents.JOIN_RESPONSE,
+        payload,
+      });
+    },
+    [],
+  );
 
   const leaveChannel = React.useCallback(() => {
     if (!presenceKey.current || !channelRef.current) return;
@@ -237,13 +242,17 @@ function useRoomChannel(
 
       const isHost = user.roomCode === code;
       const isAlreadyJoined = participantsRef.current.includes(presence.user.id);
+      const hasRejected = rejectedUsersRef.current.includes(presence.user.id);
 
       // send a join response if the user has already joined
       if ((isHost || (!isHost && !hostKey.current)) && isAlreadyJoined) {
-        await sendJoinResponse({ keys: [key], status: 'ACCEPTED' });
+        await sendJoinResponse({
+          keys: [key],
+          status: hasRejected ? 'REJECTED' : 'ACCEPTED',
+        });
       } else if (isHost) {
         // check if the user has been rejected before
-        if (rejectedUsersRef.current.includes(presence.user.id)) {
+        if (hasRejected) {
           return await sendJoinResponse({ keys: [key], status: 'REJECTED' });
         }
 
@@ -252,10 +261,7 @@ function useRoomChannel(
         toast(`${presence.user.name} wants to join!`, {
           action: {
             label: 'Accept',
-            onClick: async () => {
-              removeWaitingUser(key);
-              await sendJoinResponse({ keys: [key], status: 'ACCEPTED' });
-            },
+            onClick: () => sendJoinResponse({ keys: [key], status: 'ACCEPTED' }),
           },
         });
       }
@@ -268,18 +274,6 @@ function useRoomChannel(
 
       removeWaitingUser(key);
     });
-
-    const removeWaitingUser = (key: string) => {
-      let userIndex = -1;
-      waitingUsers.reset(arr => {
-        userIndex = arr.findIndex(({ presenceKey }) => presenceKey === key);
-        return arr;
-      });
-
-      if (userIndex === -1) return;
-
-      return waitingUsers.pop(userIndex);
-    };
 
     // handle the join response event
     channelRef.current.on(
@@ -299,21 +293,21 @@ function useRoomChannel(
         hasJoined.current = true;
         const isAlone = Object.keys(getPresenceState()).length === 1;
 
-        if (isAlone) {
+        if (isAlone || user.roomCode === code) {
           connectToScreenChannel();
           updateUserState('joined');
-        } else {
-          const signals = await createPeerSignals();
-
-          await channelRef.current!.send({
-            type: 'broadcast',
-            event: broadcastEvents.CONNECTION_REQUEST,
-            payload: {
-              key: presenceKey.current,
-              signals,
-            } satisfies ConnectionRequestPayload['payload'],
-          });
         }
+
+        const signals = await createPeerSignals();
+
+        await channelRef.current!.send({
+          type: 'broadcast',
+          event: broadcastEvents.CONNECTION_REQUEST,
+          payload: {
+            key: presenceKey.current,
+            signals,
+          } satisfies ConnectionRequestPayload['payload'],
+        });
       },
     );
 
@@ -457,6 +451,14 @@ function useRoomChannel(
 
     screenChannelRef.current.subscribe();
   }, [code]);
+
+  const removeWaitingUser = React.useCallback((keys: string | string[]) => {
+    waitingUsers.reset(arr => {
+      return arr.filter(({ presenceKey }) => {
+        return Array.isArray(keys) ? !keys.includes(presenceKey) : presenceKey !== keys;
+      });
+    });
+  }, []);
 
   // create a peer connection with each user that has joined the meeting
   const createPeerSignals = React.useCallback(
