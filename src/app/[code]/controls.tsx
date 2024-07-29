@@ -3,7 +3,7 @@
 import React from 'react';
 import { useRouter } from 'next/navigation';
 import { useForceUpdate, useMediaQuery, useScreenCapture } from 'react-pre-hooks';
-import { useMeetingRoom } from './meeting-room-provider';
+import { useMeetingRoom } from './provider';
 import { cn, getMediaTracks } from '~/lib/utils';
 
 import {
@@ -27,12 +27,7 @@ import {
   DropdownMenuTrigger,
 } from '~/components/ui/dropdown-menu';
 
-import {
-  InviteButton,
-  FullscreenButton,
-  FeedbackButton,
-  HelpButton,
-} from './meeting-room-settings';
+import { InviteButton, FullscreenButton, FeedbackButton, HelpButton } from './settings';
 
 type MeiaStateToggleProps = ButtonProps & {
   kind: 'audio' | 'video';

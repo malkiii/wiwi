@@ -4,7 +4,7 @@ import React from 'react';
 import Link from 'next/link';
 import { useMediaQuery } from 'react-pre-hooks';
 import { useSession } from '~/components/session-provider';
-import { useMeetingRoom } from './meeting-room-provider';
+import { useMeetingRoom } from './provider';
 import { MediaStreamVideo } from '~/components/media-stream-video';
 
 import { Button } from '~/components/ui/button';
@@ -35,7 +35,7 @@ import {
 
 import { Sheet, SheetContent } from '~/components/ui/sheet';
 
-import { WarningPage } from './waning-page';
+import { WarningPage } from './warning-page';
 import { UserMeetingInstant } from './user-meeting-instant';
 import { cn, getTimeString } from '~/lib/utils';
 
@@ -48,7 +48,7 @@ import {
   ParticipantsToggle,
   HangUpButton,
   ShareScreenButton,
-} from './meeting-room-controls';
+} from './controls';
 
 export function MeetingRoom() {
   const { state } = useMeetingRoom();

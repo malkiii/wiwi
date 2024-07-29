@@ -7,7 +7,7 @@ import type { MeetingUser } from '~/types';
 import { MicOffIcon } from '~/components/icons';
 import { useAudioAnalyser, useDebouncedState } from 'react-pre-hooks';
 import { UserAvatar } from '~/components/user-avatar';
-import { useMeetingRoom } from './meeting-room-provider';
+import { useMeetingRoom } from './provider';
 import { useSession } from '~/components/session-provider';
 import { MediaStreamVideo } from '~/components/media-stream-video';
 

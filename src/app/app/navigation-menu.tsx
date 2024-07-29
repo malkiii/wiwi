@@ -28,11 +28,13 @@ export function NavigationMenu() {
         <Logo type="logotype" />
         <HamburguerMenu />
       </div>
-      <div className="flex w-fit flex-col border-r py-4 max-sm:hidden">
-        <Logo type="mark" className="mb-6 pl-2" />
-        <nav className="group flex-1">
-          <NavigationMenuItems />
-        </nav>
+      <div className="relative w-fit max-sm:hidden">
+        <div className="sticky top-0 flex h-dvh w-fit flex-col border-r py-4">
+          <Logo type="mark" className="mb-6 pl-2" />
+          <nav className="group flex-1">
+            <NavigationMenuItems />
+          </nav>
+        </div>
       </div>
     </>
   );

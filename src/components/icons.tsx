@@ -33,6 +33,7 @@ export {
   SendHorizontal as SendIcon,
   CircleMinus as RemoveIcon,
   Search as SearchIcon,
+  ImagePlus as UploadImageIcon,
   X,
 } from 'lucide-react';
 

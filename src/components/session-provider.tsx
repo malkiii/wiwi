@@ -1,11 +1,11 @@
 'use client';
 
-import { createContext, useCallback, useContext, useState } from 'react';
+import { createContext, useContext, useState } from 'react';
 import type { User } from '~/types';
 
 type SessionContextData = {
   user?: User;
-  updateSessionUser: (newUser: User) => Promise<void>;
+  updateSessionUser: React.Dispatch<React.SetStateAction<User | undefined>>;
 };
 
 export const SessionContext = createContext<SessionContextData>({} as any);
@@ -15,13 +15,8 @@ type SessionProviderProps = React.PropsWithChildren<{ user?: User }>;
 export function SessionProvider({ children, user: dbUser }: SessionProviderProps) {
   const [user, setUser] = useState(dbUser);
 
-  const updateSessionUser = useCallback(
-    async (newUser: User) => setUser(prev => prev && newUser),
-    [],
-  );
-
   return (
-    <SessionContext.Provider value={{ user, updateSessionUser }}>
+    <SessionContext.Provider value={{ user, updateSessionUser: setUser }}>
       {children}
     </SessionContext.Provider>
   );
