@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { useFullscreen } from 'react-pre-hooks';
-import { useMeetingRoom } from './meeting-room-provider';
+import { useMeetingRoom } from './provider';
 
 import {
   InviteIcon,
