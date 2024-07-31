@@ -34,11 +34,14 @@ export default {
 
       return await isPasswordValid(password, userPassword);
     },
-    jwt: async ({ token, user }) => {
+    jwt: async ({ token, user, trigger, session }) => {
+      if (trigger === 'update' && session) {
+        return { ...token, user: { ...token.user, ...session.user } };
+      }
+
       if (!user) return token;
 
       const dbUser = (await getUser(user.email!)) ?? token.user;
-
       return { ...token, user: dbUser ?? token.user };
     },
     session: async ({ token, session }) => {
