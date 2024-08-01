@@ -42,7 +42,7 @@ export function MeetingInput() {
           id="meeting-code"
           className="flex-1"
           placeholder="Enter a code or link"
-          onKeyDown={e => e.key === 'Enter' && joinMeeting()}
+          onKeyDown={e => e.key.toLowerCase() === 'enter' && joinMeeting()}
           onChange={e => {
             setError(undefined);
             setValue(e.target.value);

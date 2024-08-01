@@ -48,8 +48,8 @@ dependencies:
     specifier: ^0.7.0
     version: 0.7.0
   cloudinary:
-    specifier: ^2.3.1
-    version: 2.3.1
+    specifier: ^2.4.0
+    version: 2.4.0
   clsx:
     specifier: ^2.1.1
     version: 2.1.1
@@ -2425,8 +2425,8 @@ packages:
   /client-only@0.0.1:
     resolution: {integrity: sha512-IV3Ou0jSMzZrd3pZ48nLkT9DA7Ag1pnPzaiQhpW7c3RbcqqzvzzVu+L8gfqMp/8IM2MQtSiqaCxrrcfu8I8rMA==}
 
-  /cloudinary@2.3.1:
-    resolution: {integrity: sha512-DW63pfRhN6Ob9czyLSG8G3Vz+m1tijLYyTZMOuFpFWPwtVXZVdFrc2ggDtGrbIBYpvr94tjPOkOdWgYW2ae3rA==}
+  /cloudinary@2.4.0:
+    resolution: {integrity: sha512-5HA9VffeaR3MKiHpRo9A5SWgZFPxzlEDep0O4KzL3TIDi1hmQC9gjA4dHpVmdeFC0ZD1Xr5fGsWRKVDK9Ay9PQ==}
     engines: {node: '>=9'}
     dependencies:
       lodash: 4.17.21

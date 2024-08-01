@@ -84,10 +84,11 @@
     @apply block h-auto max-w-full;
   }
 
+  html,
   .overflow-auto {
     scrollbar-width: thin;
     scrollbar-color: hsl(var(--foreground) / 0.2) transparent;
-    scrollbar-gutter: stable;
+    /* scrollbar-gutter: stable; */
   }
 }
 

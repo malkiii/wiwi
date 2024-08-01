@@ -29,7 +29,7 @@
     "@t3-oss/env-nextjs": "^0.10.1",
     "bcryptjs": "^2.4.3",
     "class-variance-authority": "^0.7.0",
-    "cloudinary": "^2.3.1",
+    "cloudinary": "^2.4.0",
     "clsx": "^2.1.1",
     "drizzle-orm": "^0.30.10",
     "jsonwebtoken": "^9.0.2",

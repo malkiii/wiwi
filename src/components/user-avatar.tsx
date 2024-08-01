@@ -36,15 +36,19 @@ export function UserAvatar({ user, size = 40, className, ...props }: AvatarProps
 }
 
 function getOriginalAvatar(imageSrc: string): string {
-  const src = new URL(imageSrc);
+  try {
+    const src = new URL(imageSrc);
 
-  switch (src.hostname) {
-    case 'lh3.googleusercontent.com':
-      return imageSrc.replace(/=s\d+(-c)?/g, '=s360');
-    case 'res.cloudinary.com':
-      src.pathname = src.pathname.replace(/w_\d+/g, 'w_360');
-      return src.href;
-    default:
-      return imageSrc;
+    switch (src.hostname) {
+      case 'lh3.googleusercontent.com':
+        return imageSrc.replace(/=s\d+(-c)?/g, '=s360');
+      case 'res.cloudinary.com':
+        src.pathname = src.pathname.replace(/w_\d+/g, 'w_360');
+        return src.href;
+      default:
+        return imageSrc;
+    }
+  } catch {
+    return imageSrc;
   }
 }

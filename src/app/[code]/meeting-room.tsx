@@ -410,7 +410,12 @@ function ChatInput() {
 
   return (
     <div className="flex items-center gap-4 py-4">
-      <Textarea ref={inputRef} className="flex-1 resize-none" placeholder="Type a message" />
+      <Textarea
+        ref={inputRef}
+        className="flex-1 resize-none"
+        placeholder="Type a message"
+        onKeyDown={e => e.key.toLowerCase() === 'enter' && sendMessage()}
+      />
       <Button className="h-full min-h-10 w-10 p-2" onClick={sendMessage}>
         <SendIcon className="size-5" />
       </Button>

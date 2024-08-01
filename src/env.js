@@ -10,7 +10,9 @@ export const env = createEnv({
     GMAIL_USER: z.string().email(),
     GMAIL_APP_PASSWORD: z.string(),
     POSTGRES_DATABASE_URL: z.string().url(),
-    CLOUDINARY_URL: z.string().url(),
+    CLOUDINARY_CLOUD_NAME: z.string(),
+    CLOUDINARY_API_KEY: z.string(),
+    CLOUDINARY_API_SECRET: z.string(),
     NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
   },
   /**
@@ -30,7 +32,9 @@ export const env = createEnv({
     GMAIL_APP_PASSWORD: process.env.GMAIL_APP_PASSWORD,
     GMAIL_USER: process.env.GMAIL_USER,
     POSTGRES_DATABASE_URL: process.env.POSTGRES_DATABASE_URL,
-    CLOUDINARY_URL: process.env.CLOUDINARY_URL,
+    CLOUDINARY_CLOUD_NAME: process.env.CLOUDINARY_CLOUD_NAME,
+    CLOUDINARY_API_KEY: process.env.CLOUDINARY_API_KEY,
+    CLOUDINARY_API_SECRET: process.env.CLOUDINARY_API_SECRET,
     NODE_ENV: process.env.NODE_ENV,
 
     // Expose client-side env vars
