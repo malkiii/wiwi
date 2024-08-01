@@ -8,8 +8,6 @@ import { Button } from '~/components/ui/button';
 import { Label } from '~/components/ui/label';
 import { Form } from '~/components/ui/form';
 import { InputField } from '~/components/input-field';
-
-import { Logo } from '~/components/logo';
 import { GoogleIcon } from '~/components/icons';
 
 import { useCallback } from 'react';
@@ -38,52 +36,36 @@ export function LoginForm() {
   }, []);
 
   return (
-    <div className="flex min-h-dvh items-center justify-center px-6">
-      <div className="grid w-full max-w-sm gap-6">
-        <div className="grid gap-2 text-center">
-          <Logo type="mark" className="mx-auto mb-2 *:w-24" />
-          <p className="text-balance text-muted-foreground">
-            Enter your credentials to login to your account
-          </p>
+    <Form {...form}>
+      <form className="grid gap-4" onSubmit={form.handleSubmit(onSubmit)}>
+        <InputField
+          name="email"
+          control={form.control as any}
+          fieldProps={{ placeholder: 'example@gmail.com' }}
+        >
+          <Label htmlFor="email">Email Address</Label>
+        </InputField>
+        <InputField
+          name="password"
+          control={form.control as any}
+          fieldProps={{ type: 'password', placeholder: '*'.repeat(10) }}
+        >
+          <div className="flex items-center">
+            <Label htmlFor="password">Password</Label>
+            <Link href="/forgot-password" className="ml-auto inline-block text-sm underline">
+              Forgot your password?
+            </Link>
+          </div>
+        </InputField>
+        <Button type="submit" className="w-full" loading={form.formState.isSubmitting}>
+          Login
+        </Button>
+        <div className="flex items-center gap-2 text-xs uppercase text-muted-foreground before:h-px before:flex-1 before:bg-border after:h-px after:flex-1 after:bg-border">
+          or continue with
         </div>
-        <Form {...form}>
-          <form className="grid gap-4" onSubmit={form.handleSubmit(onSubmit)}>
-            <InputField
-              name="email"
-              control={form.control as any}
-              fieldProps={{ placeholder: 'example@gmail.com' }}
-            >
-              <Label htmlFor="email">Email</Label>
-            </InputField>
-            <InputField
-              name="password"
-              control={form.control as any}
-              fieldProps={{ type: 'password', placeholder: '*'.repeat(10) }}
-            >
-              <div className="flex items-center">
-                <Label htmlFor="password">Password</Label>
-                <Link href="/forgot-password" className="ml-auto inline-block text-sm underline">
-                  Forgot your password?
-                </Link>
-              </div>
-            </InputField>
-            <Button type="submit" className="w-full" loading={form.formState.isSubmitting}>
-              Login
-            </Button>
-            <div className="flex items-center gap-2 text-xs uppercase text-muted-foreground before:h-px before:flex-1 before:bg-border after:h-px after:flex-1 after:bg-border">
-              or continue with
-            </div>
-            <AuthProviders />
-          </form>
-        </Form>
-        <div className="mt-4 text-center text-sm text-muted-foreground">
-          Don&apos;t have an account?{' '}
-          <Link href="/register" className="text-foreground underline">
-            Sign up
-          </Link>
-        </div>
-      </div>
-    </div>
+        <AuthProviders />
+      </form>
+    </Form>
   );
 }
 

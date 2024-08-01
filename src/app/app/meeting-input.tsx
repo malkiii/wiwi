@@ -67,7 +67,7 @@ export function MeetingInput() {
           href={`/${user?.roomCode}`}
           className={isNavigating ? 'pointer-events-none opacity-50' : ''}
         >
-          <VideoIcon className="mr-2 size-5" /> New meeting
+          <VideoIcon className="mr-2 size-5" /> Enter your meeting room
         </Link>
       </Button>
       <ShareMeeting code={user?.roomCode}>

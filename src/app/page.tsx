@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { Button } from '~/components/ui/button';
-import { VideoIcon } from '~/components/icons';
+import { VideoIcon, StarIcon } from '~/components/icons';
 import { NavigationLayout } from './navigation-layout';
 import Image from 'next/image';
 
@@ -12,18 +12,20 @@ export default function Page() {
           <h1 className="mb-4 text-4xl md:text-6xl lg:mb-8 lg:text-balance">
             Start your video calls and meetings with WiWi
           </h1>
-          <p className="text-balance text-xl md:text-2xl tracking-tight">
+          <p className="text-balance text-xl tracking-tight md:text-2xl">
             Fast and high quality real-time meetings, share your screen, and collaborate with your
             team.
           </p>
           <div className="my-8 flex gap-4 lg:my-16">
             <Button asChild>
-              <Link href="/app" className="gap-2">
+              <Link href="/register" className="gap-2">
                 <VideoIcon /> Get Started
               </Link>
             </Button>
             <Button variant="outline" asChild>
-              <Link href="/learn">Learn more</Link>
+              <a href="https://github.com/malkiii/wiwi" target="_blank" className="gap-2">
+                <StarIcon /> Star on GitHub
+              </a>
             </Button>
           </div>
         </div>

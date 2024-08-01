@@ -13,6 +13,7 @@ import {
   SettingsIcon,
   PrivacyIcon,
   TermsIcon,
+  FeedbackIcon,
   HelpIcon,
   LogOutIcon,
   MenuIcon,
@@ -111,7 +112,6 @@ const menuItems: NavigationMenuItem[] = [
     pathname: '/app',
     icon: VideoIcon,
   },
-  null,
   {
     name: 'Settings',
     pathname: '/app/settings',
@@ -128,8 +128,14 @@ const menuItems: NavigationMenuItem[] = [
     pathname: '/terms',
     icon: TermsIcon,
   },
+  null,
   {
-    name: 'Help',
+    name: 'Feedback',
+    pathname: '/feedback',
+    icon: FeedbackIcon,
+  },
+  {
+    name: 'Help & Support',
     pathname: '/help',
     icon: HelpIcon,
   },

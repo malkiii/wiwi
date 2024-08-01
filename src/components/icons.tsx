@@ -8,7 +8,7 @@ export {
   Handshake as TermsIcon,
   CircleHelp as HelpIcon,
   LogOut as LogOutIcon,
-  Menu as MenuIcon,
+  AlignRight as MenuIcon,
   Plus as AddIcon,
   Calendar as CalendarIcon,
   History as TimeIcon,
@@ -34,6 +34,7 @@ export {
   CircleMinus as RemoveIcon,
   Search as SearchIcon,
   ImagePlus as UploadImageIcon,
+  Star as StarIcon,
   X,
 } from 'lucide-react';
 

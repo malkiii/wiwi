@@ -6,14 +6,6 @@ import { Link } from '~/components/ui/link';
 import { Logo } from '~/components/logo';
 
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '~/components/ui/select';
-
-import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
@@ -52,27 +44,10 @@ function Header() {
       <div className="mx-auto flex justify-between">
         <Logo type="logotype" />
         <nav className="flex items-center gap-4">
-          <LanguageSwitcher />
           <UserNavigationMenu />
         </nav>
       </div>
     </header>
-  );
-}
-
-function LanguageSwitcher() {
-  return (
-    <Select>
-      <SelectTrigger className="w-28">
-        <SelectValue placeholder="Language" />
-      </SelectTrigger>
-      <SelectContent defaultValue="English">
-        <SelectItem value="English">English</SelectItem>
-        <SelectItem value="Spanish">Española</SelectItem>
-        <SelectItem value="French">Français</SelectItem>
-        <SelectItem value="Arabic">العربية</SelectItem>
-      </SelectContent>
-    </Select>
   );
 }
 
@@ -81,9 +56,14 @@ function UserNavigationMenu() {
 
   if (!user) {
     return (
-      <Button asChild>
-        <NextLink href="/login">Login</NextLink>
-      </Button>
+      <div className="flex gap-4">
+        <Button variant="outline" asChild>
+          <NextLink href="/register">Sign Up</NextLink>
+        </Button>
+        <Button asChild>
+          <NextLink href="/login">Login</NextLink>
+        </Button>
+      </div>
     );
   }
 
@@ -92,7 +72,7 @@ function UserNavigationMenu() {
       <DropdownMenuTrigger className="rounded-full">
         <UserAvatar user={user} />
       </DropdownMenuTrigger>
-      <DropdownMenuContent className="w-[170px] *:w-full" align="end">
+      <DropdownMenuContent className="w-[180px] *:w-full" align="end">
         <DropdownMenuLabel>My Account</DropdownMenuLabel>
         <DropdownMenuSeparator />
         {menuItems.map((item, index) =>
@@ -140,7 +120,7 @@ const menuItems = [
     icon: TermsIcon,
   },
   {
-    name: 'Help',
+    name: 'Help & Support',
     pathname: '/help',
     icon: HelpIcon,
   },
@@ -148,7 +128,7 @@ const menuItems = [
 
 function Footer() {
   return (
-    <footer className="text-balance p-4 text-sm max-lg:text-center">
+    <footer className="text-balance p-4 text-center text-sm">
       &copy; {new Date().getFullYear()} By{' '}
       <Link href={site.author.url} className="underline">
         {site.author.name}

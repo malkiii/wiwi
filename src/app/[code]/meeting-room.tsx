@@ -540,10 +540,8 @@ function Participants() {
         </div>
       </div>
       <div className="grid gap-4">
-        <ParticipantItem
-          user={room.host?.info ?? userInfo}
-          presenceKey={room.host?.presenceKey ?? room.presenceKey.current}
-        />
+        {room.host && <ParticipantItem user={room.host.info} presenceKey={room.host.presenceKey} />}
+        <ParticipantItem user={userInfo} presenceKey={room.presenceKey.current} />
         {joinedUsers.map(user =>
           user.info.roomCode === code ? null : (
             <ParticipantItem
