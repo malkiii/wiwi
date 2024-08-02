@@ -22,18 +22,11 @@ import { useSession } from './session-provider';
 type ShareMeetingProps = React.ComponentProps<typeof Dialog> & {
   code?: string;
   description?: string;
-  onClose?: () => any;
 };
 
-export function ShareMeeting({
-  code,
-  description,
-  onClose,
-  children,
-  ...props
-}: ShareMeetingProps) {
+export function ShareMeeting({ code, description, children, ...props }: ShareMeetingProps) {
   const clipboard = useClipboard();
-  const userName = useSession().user!.name;
+  const userName = useSession().user?.name;
 
   const getLink = () => {
     if (typeof window === 'undefined') return '';
@@ -80,7 +73,7 @@ export function ShareMeeting({
             Share
           </Button>
           <DialogClose asChild>
-            <Button type="button" variant="secondary" onClick={onClose}>
+            <Button type="button" variant="secondary">
               Cancel
             </Button>
           </DialogClose>

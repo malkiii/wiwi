@@ -1,40 +1,13 @@
 'use client';
 
 import React from 'react';
+import Link, { type LinkProps } from 'next/link';
 import { useFullscreen } from 'react-pre-hooks';
-import { useMeetingRoom } from './provider';
 
-import {
-  InviteIcon,
-  MaximizeIcon,
-  MinimizeIcon,
-  HelpIcon,
-  FeedbackIcon,
-  SettingsIcon,
-  VideoIcon,
-  MicOnIcon,
-} from '~/components/icons';
-
-import {
-  Dialog,
-  DialogTrigger,
-  DialogContent,
-  DialogFooter,
-  DialogClose,
-} from '~/components/ui/dialog';
-
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '~/components/ui/select';
+import { InviteIcon, MaximizeIcon, MinimizeIcon, HelpIcon, FeedbackIcon } from '~/components/icons';
 
 import { ShareMeeting } from '~/components/share-meeting';
-import { Button } from '~/components/ui/button';
-import { Label } from '~/components/ui/label';
-import { getMediaTracks } from '~/lib/utils';
+import { FeedbackModal } from '~/components/feedback-modal';
 
 type ButtonProps = React.ComponentProps<'button'>;
 
@@ -78,30 +51,32 @@ export const FullscreenButton = React.forwardRef<HTMLButtonElement, ButtonProps>
 FullscreenButton.displayName = 'FullscreenButton';
 
 export const FeedbackButton = React.forwardRef<HTMLButtonElement, ButtonProps>(
-  ({ onClick: _, ...props }, ref) => {
+  ({ onClick, ...props }, ref) => {
     return (
-      <button {...props} ref={ref}>
-        <FeedbackIcon className="mr-3 size-5 text-accent-foreground" />
-        Give us feedback
-      </button>
+      <FeedbackModal onOpenChange={handleDialogClose(onClick)}>
+        <button {...props} ref={ref}>
+          <FeedbackIcon className="mr-3 size-5 text-accent-foreground" />
+          Give us feedback
+        </button>
+      </FeedbackModal>
     );
   },
 );
 
 FeedbackButton.displayName = 'FeedbackButton';
 
-export const HelpButton = React.forwardRef<HTMLButtonElement, ButtonProps>(
+export const SupportButton = React.forwardRef<HTMLAnchorElement, Omit<LinkProps, 'href'>>(
   ({ onClick: _, ...props }, ref) => {
     return (
-      <button {...props} ref={ref}>
+      <Link {...props} href="/support" target="_blank" ref={ref}>
         <HelpIcon className="mr-3 size-5 text-accent-foreground" />
         Help and Support
-      </button>
+      </Link>
     );
   },
 );
 
-HelpButton.displayName = 'HelpButton';
+SupportButton.displayName = 'HelpButton';
 
 function handleDialogClose(handler?: Function) {
   return (opened: boolean) => {

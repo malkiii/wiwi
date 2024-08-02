@@ -9,7 +9,8 @@ export default middleware(request => {
 
   const isHomePage = url.pathname === '/';
   const isAuthenticated = !!request.auth?.user;
-  const isAuthRoute = ['/login', '/register'].includes(url.pathname);
+  const isAuthRoute =
+    ['/login', '/register'].includes(url.pathname) || url.pathname.startsWith('/password');
 
   if (isAuthenticated && (isHomePage || isAuthRoute)) {
     return NextResponse.redirect(new URL('/app', url.origin));
@@ -24,5 +25,5 @@ export default middleware(request => {
  * @see https://nextjs.org/docs/app/building-your-application/routing/middleware#matcher
  */
 export const config = {
-  matcher: ['/', '/login', '/register', '/app/:path*'],
+  matcher: ['/', '/login', '/register', '/password/:path*', '/app/:path*'],
 };

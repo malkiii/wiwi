@@ -387,7 +387,7 @@ function ChatInput() {
   const sendMessage = React.useCallback(() => {
     if (!inputRef.current) return;
 
-    const message = inputRef.current.value.trim();
+    const message = inputRef.current.value.trim().replace(/\n+/g, '\n\n');
     if (!message) return;
 
     room.sendChatMessage(user, message);
@@ -412,9 +412,16 @@ function ChatInput() {
     <div className="flex items-center gap-4 py-4">
       <Textarea
         ref={inputRef}
+        maxLength={512}
         className="flex-1 resize-none"
         placeholder="Type a message"
-        onKeyDown={e => e.key.toLowerCase() === 'enter' && sendMessage()}
+        onKeyDown={e => {
+          if (e.key === 'Enter' && !e.shiftKey) return;
+          e.preventDefault();
+          e.stopPropagation();
+
+          sendMessage();
+        }}
       />
       <Button className="h-full min-h-10 w-10 p-2" onClick={sendMessage}>
         <SendIcon className="size-5" />
@@ -429,9 +436,10 @@ function ChatItem(props: ChatMessage & { messageOnly?: boolean }) {
   if (props.messageOnly) {
     return (
       <div className="w-full pl-[43px] text-sm">
-        <div className="mt-1 w-fit max-w-full break-words rounded-lg bg-muted px-3 py-2">
-          {props.message}
-        </div>
+        <div
+          dangerouslySetInnerHTML={{ __html: props.message.replace(/\n/g, '<br />') }}
+          className="mt-1 w-fit max-w-full break-words rounded-lg bg-muted px-3 py-2"
+        />
       </div>
     );
   }

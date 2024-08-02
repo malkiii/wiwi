@@ -1,8 +1,6 @@
 'use client';
 
-import Link from 'next/link';
 import { signIn } from 'next-auth/react';
-import { useRouter } from 'next/navigation';
 
 import { Button } from '~/components/ui/button';
 import { Label } from '~/components/ui/label';
@@ -14,9 +12,9 @@ import { useCallback } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { formSchema, type FormValues } from './schema';
+import { ForgotPasswordModal } from './forgot-password-modal';
 
 export function LoginForm() {
-  const router = useRouter();
   const form = useForm<FormValues>({ resolver: zodResolver(formSchema) });
 
   const onSubmit = useCallback(async (values: FormValues) => {
@@ -26,7 +24,7 @@ export function LoginForm() {
       redirect: false,
     });
 
-    if (!response?.error) return router.push('/app');
+    if (!response?.error) return window.location.reload();
 
     if (response.error === 'AccessDenied') {
       form.setError('password', { message: 'Invalid password!' });
@@ -43,7 +41,7 @@ export function LoginForm() {
           control={form.control as any}
           fieldProps={{ placeholder: 'example@gmail.com' }}
         >
-          <Label htmlFor="email">Email Address</Label>
+          <Label htmlFor="email">Email address</Label>
         </InputField>
         <InputField
           name="password"
@@ -52,9 +50,14 @@ export function LoginForm() {
         >
           <div className="flex items-center">
             <Label htmlFor="password">Password</Label>
-            <Link href="/forgot-password" className="ml-auto inline-block text-sm underline">
-              Forgot your password?
-            </Link>
+            <ForgotPasswordModal>
+              <Button
+                variant="link"
+                className="ml-auto inline-block text-sm underline underline-offset-1"
+              >
+                Forgot your password?
+              </Button>
+            </ForgotPasswordModal>
           </div>
         </InputField>
         <Button type="submit" className="w-full" loading={form.formState.isSubmitting}>

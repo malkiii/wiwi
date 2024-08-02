@@ -121,7 +121,7 @@ const menuItems = [
   },
   {
     name: 'Help & Support',
-    pathname: '/help',
+    pathname: '/support',
     icon: HelpIcon,
   },
 ];

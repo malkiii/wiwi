@@ -23,7 +23,8 @@ export default function Section() {
 
     if (name.length < 3) throw new Error('You name must be at least 3 characters.');
     if (name.length > 35) throw new Error('Your name must be less than 35 characters.');
-    if (name.match(/[^a-zA-Z]/)) throw new Error('Your name must contain letters only.');
+    if (name.match(/[^a-zA-Z ]/))
+      throw new Error('Your name must contain letters and spaces only.');
 
     const formData = new FormData();
     formData.set('name', name);

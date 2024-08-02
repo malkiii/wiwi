@@ -27,7 +27,7 @@ import {
   DropdownMenuTrigger,
 } from '~/components/ui/dropdown-menu';
 
-import { InviteButton, FullscreenButton, FeedbackButton, HelpButton } from './settings';
+import { InviteButton, FullscreenButton, FeedbackButton, SupportButton } from './settings';
 
 type MeiaStateToggleProps = ButtonProps & {
   kind: 'audio' | 'video';
@@ -105,7 +105,7 @@ export function SettingsMenu({ className, ...props }: ButtonProps) {
           <FeedbackButton />
         </DropdownMenuItem>
         <DropdownMenuItem asChild>
-          <HelpButton />
+          <SupportButton />
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
@@ -119,8 +119,7 @@ export function ChatToggle({ className, onClick, ...props }: ButtonProps) {
   const updateMessagesNumber = () => setReadMessages(room.chatMessages.length);
 
   React.useEffect(() => {
-    if (props.variant === 'secondary') return;
-    updateMessagesNumber();
+    if (props.variant === 'default') updateMessagesNumber();
   }, [room.chatMessages.length]);
 
   return (

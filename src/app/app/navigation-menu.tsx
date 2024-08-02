@@ -1,13 +1,15 @@
 'use client';
 
 import Link from 'next/link';
+import React from 'react';
+import { usePathname } from 'next/navigation';
+
 import { Logo } from '~/components/logo';
 import { Button } from '~/components/ui/button';
 import { Divider } from '~/components/ui/divider';
 import { LogOutButton } from '~/components/logout-button';
-
+import { FeedbackModal } from '~/components/feedback-modal';
 import { Sheet, SheetContent, SheetTrigger } from '~/components/ui/sheet';
-
 import {
   VideoIcon,
   SettingsIcon,
@@ -18,9 +20,6 @@ import {
   LogOutIcon,
   MenuIcon,
 } from '~/components/icons';
-
-import { useState } from 'react';
-import { usePathname } from 'next/navigation';
 
 export function NavigationMenu() {
   return (
@@ -42,7 +41,7 @@ export function NavigationMenu() {
 }
 
 function HamburguerMenu() {
-  const [isNavigating, setIsNavigating] = useState(false);
+  const [isNavigating, setIsNavigating] = React.useState(false);
 
   return (
     <Sheet open={isNavigating ? false : undefined}>
@@ -71,24 +70,28 @@ function NavigationMenuItems() {
   return (
     <div className="flex min-h-full flex-col justify-between px-2">
       <div className="grid gap-2 *:justify-start">
-        {menuItems.map((item, index) =>
-          item ? (
-            <Button
-              key={index}
-              variant={item.pathname === pathname ? 'ghost-active' : 'ghost-inactive'}
-              asChild
-            >
-              <Link href={item.pathname}>
-                <item.icon className="size-5" />
-                <span className="ml-3 inline-block overflow-hidden whitespace-nowrap transition-[width,margin,opacity] duration-200 group-hover:ml-3 group-hover:w-40 group-hover:opacity-100 sm:ml-0 sm:w-0 sm:opacity-0">
-                  {item.name}
-                </span>
-              </Link>
-            </Button>
-          ) : (
-            <Divider key={index} />
-          ),
-        )}
+        {menuItems.map((item, index) => {
+          if (!item) return <Divider key={index} />;
+
+          const isFeedback = item.name === 'Feedback';
+          const Wrapper = isFeedback ? FeedbackModal : React.Fragment;
+
+          return (
+            <Wrapper key={index}>
+              <Button
+                variant={item.pathname === pathname ? 'ghost-active' : 'ghost-inactive'}
+                asChild
+              >
+                <Link href={item.pathname}>
+                  <item.icon className="size-5" />
+                  <span className="ml-3 inline-block overflow-hidden whitespace-nowrap transition-[width,margin,opacity] duration-200 group-hover:ml-3 group-hover:w-40 group-hover:opacity-100 sm:ml-0 sm:w-0 sm:opacity-0">
+                    {item.name}
+                  </span>
+                </Link>
+              </Button>
+            </Wrapper>
+          );
+        })}
       </div>
       <LogOutButton variant="ghost-inactive" className="justify-start text-left">
         <LogOutIcon className="size-5" />
@@ -131,12 +134,12 @@ const menuItems: NavigationMenuItem[] = [
   null,
   {
     name: 'Feedback',
-    pathname: '/feedback',
+    pathname: '#',
     icon: FeedbackIcon,
   },
   {
     name: 'Help & Support',
-    pathname: '/help',
+    pathname: '/support',
     icon: HelpIcon,
   },
 ];

@@ -35,7 +35,8 @@ export default function Page() {
             src="/hero.svg"
             width={547}
             height={417}
-            className="w-full"
+            style={{ aspectRatio: '547 / 417' }}
+            className="w-full italic"
             alt="Hero image"
           />
         </div>

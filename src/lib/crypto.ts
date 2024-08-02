@@ -10,11 +10,15 @@ export function isPasswordValid(password: string, hashedPassword: string) {
   return compare(password, hashedPassword);
 }
 
-export function generateVerificationToken(
+export function generateToken(
   payload: Record<string, any>,
-  callback: jwt.SignCallback,
+  callback: (token: string) => any,
+  options: jwt.SignOptions = {},
 ) {
-  return jwt.sign(payload, env.AUTH_SECRET, { expiresIn: '1d' }, callback);
+  return jwt.sign(payload, env.AUTH_SECRET, options, (err, token) => {
+    if (err || !token) throw new Error(err?.message ?? 'Token not found!');
+    callback(token);
+  });
 }
 
 export function verifyToken(token: string) {
