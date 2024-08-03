@@ -26,9 +26,9 @@ export default function Section() {
     const formData = new FormData();
     formData.set('image', image);
 
-    await updateUserImage(formData);
+    const newImage = await updateUserImage(formData);
 
-    updateSessionUser(curr => curr && { ...curr, image });
+    updateSessionUser(curr => curr && { ...curr, image: newImage });
 
     setIsCropping(false);
     setIsOpened(false);
@@ -107,7 +107,7 @@ function ImageCropper(props: ImageCropperProps) {
     <div className="grid gap-4">
       <div
         ref={containerRef}
-        className="relative h-[50dvh] w-full cursor-move select-none overflow-hidden"
+        className="relative h-[50dvh] w-full cursor-move touch-none select-none overflow-hidden"
       >
         <div className="pointer-events-none absolute inset-0 m-auto aspect-square w-3/5">
           <img ref={imageRef} src={props.image} style={cropper.styles.image} alt="Cropped image" />
@@ -206,7 +206,6 @@ function useImageCropper(
 
     const canvas = document.createElement('canvas');
 
-    // image size should be less than 420x420
     const size = Math.min(maskWidth, 420);
     canvas.width = size;
     canvas.height = size;

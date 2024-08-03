@@ -1,5 +1,11 @@
+import type { Metadata } from 'next';
 import { Logo } from '~/components/logo';
 import { SupportForm } from './form';
+
+export const metadata: Metadata = {
+  title: 'Support',
+  description: 'Get help with your account, billing, or technical issues.',
+};
 
 export default function Page() {
   return (

@@ -1,4 +1,9 @@
+import type { Metadata } from 'next';
 import { MeetingInput, MeetingInputLabel } from './meeting-input';
+
+export const metadata: Metadata = {
+  title: 'Dashboard',
+};
 
 export default function Page() {
   return (

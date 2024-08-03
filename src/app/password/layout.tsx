@@ -1,4 +1,9 @@
+import type { Metadata } from 'next';
 import { Logo } from '~/components/logo';
+
+export const metadata: Metadata = {
+  title: 'Reset your password',
+};
 
 export default function Layout({ children }: React.PropsWithChildren) {
   return (

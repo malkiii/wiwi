@@ -26,7 +26,7 @@ type ShareMeetingProps = React.ComponentProps<typeof Dialog> & {
 
 export function ShareMeeting({ code, description, children, ...props }: ShareMeetingProps) {
   const clipboard = useClipboard();
-  const userName = useSession().user?.name;
+  const { user } = useSession();
 
   const getLink = () => {
     if (typeof window === 'undefined') return '';
@@ -58,14 +58,14 @@ export function ShareMeeting({ code, description, children, ...props }: ShareMee
             <Icon className="size-4" />
           </Button>
         </div>
-        <DialogFooter className="gap-y-2 sm:justify-between">
+        <DialogFooter className="gap-y-2">
           <Button
             type="button"
             disabled={typeof window === 'undefined' || !navigator.share}
             onClick={() => {
               navigator.share?.({
                 title: 'WiWi',
-                text: `${userName} invites you to a meeting.`,
+                text: `${user?.name} invites you to a meeting.`,
                 url: `https://${getLink()}`,
               });
             }}

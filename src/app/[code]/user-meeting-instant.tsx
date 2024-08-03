@@ -40,8 +40,9 @@ export function UserMeetingInstant({
 
   return (
     <div
+      title={info.name}
       className={cn(
-        'relative flex items-center justify-center overflow-hidden rounded-lg bg-muted outline-2 outline-primary',
+        'group relative flex items-center justify-center overflow-hidden rounded-lg bg-muted outline-2 outline-primary',
         isSpeaking && 'outline',
         className,
       )}

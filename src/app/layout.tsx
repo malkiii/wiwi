@@ -4,6 +4,7 @@ import { auth } from '~/server/auth';
 import { Inter as FontSans } from 'next/font/google';
 import { SessionProvider } from '~/components/session-provider';
 import site from '~/constants/site';
+import { env } from '~/env';
 
 const fontSans = FontSans({
   display: 'swap',
@@ -17,12 +18,23 @@ export const metadata: Metadata = {
     default: site.name,
     template: `%s | ${site.name}`,
   },
+  authors: [{ name: site.author.name, url: site.author.url }],
   description: site.description,
   icons: [
     { rel: 'icon', sizes: '32x32', url: '/favicon-32x32.png' },
     { rel: 'icon', sizes: '16x16', url: '/favicon-16x16.png' },
-    { rel: 'apple-touch-icon', sizes: '180x180', url: '/apple-touch-icon.png' },
   ],
+  openGraph: {
+    title: site.name,
+    description: 'Full Stack Web Developer.',
+    images: new URL('/og', env.AUTH_URL),
+    url: env.AUTH_URL,
+    siteName: site.name,
+    type: 'website',
+  },
+  twitter: {
+    card: 'summary_large_image',
+  },
 };
 
 export default async function RootLayout({ children }: React.PropsWithChildren) {

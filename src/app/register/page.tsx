@@ -4,7 +4,8 @@ import { Logo } from '~/components/logo';
 import { SignupForm } from './form';
 
 export const metadata: Metadata = {
-  title: 'Signup',
+  title: 'Get started',
+  description: 'Sign up for a new account on WiWi.',
 };
 
 export default function Page() {

@@ -18,8 +18,8 @@ export async function uploadImage(folder: FolderName, dataURL: string, userId: s
       folder: `wiwi-${folder}`,
     });
 
-    // return cloudinary.url(image.public_id, { width: image.width });
-    return getCloudinaryURL(image.public_id, image.width);
+    // return cloudinary.url(image.public_id, { width: image.width, version: image.version });
+    return getCloudinaryURL(image.public_id, image.version);
   } catch (error) {
     console.error(error);
     throw new Error('Failed to upload an image!');
@@ -31,6 +31,6 @@ export async function deleteImage(id: string) {
 }
 
 // temporary solution since cloudinary.url doesn't work
-export function getCloudinaryURL(id: string, width: number) {
-  return `https://res.cloudinary.com/${env.CLOUDINARY_CLOUD_NAME}/image/upload/w_${width}/${id}`;
+export function getCloudinaryURL(id: string, version: number) {
+  return `https://res.cloudinary.com/${env.CLOUDINARY_CLOUD_NAME}/image/upload/v${version}/${id}`;
 }

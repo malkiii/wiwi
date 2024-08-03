@@ -20,6 +20,8 @@ import {
   MicOffIcon,
   MicOnIcon,
   SearchIcon,
+  PinIcon,
+  UnpinIcon,
 } from '~/components/icons';
 import { CheckCheck as DoubleCheckIcon } from 'lucide-react';
 import { UserAvatar } from '~/components/user-avatar';
@@ -135,7 +137,11 @@ function Room() {
   const lastType = React.useRef<typeof sidebarContentType>();
 
   const displayedUsers = React.useMemo(() => {
-    let allUsers = room.joinedUsers.filter(user => user.presenceKey !== room.speaker?.presenceKey);
+    let allUsers = room.joinedUsers.filter(
+      user =>
+        user.presenceKey !== room.speaker?.presenceKey &&
+        user.presenceKey !== room.pinnedUser?.presenceKey,
+    );
 
     const currentUser: MeetingUser = {
       info: userInfo,
@@ -149,13 +155,16 @@ function Room() {
       mainUser = undefined;
       allUsers.unshift(currentUser);
 
+      if (room.pinnedUser) allUsers.unshift(room.pinnedUser);
       if (room.speaker) allUsers.unshift(room.speaker);
-    } else if (room.speaker) {
-      if (room.speaker.info.id === currentUser.info.id) {
+    } else if (room.pinnedUser || room.speaker) {
+      const mainPerson = room.pinnedUser ?? room.speaker!;
+
+      if (mainPerson.info.id === currentUser.info.id) {
         mainUser = currentUser;
-        allUsers.unshift(room.speaker);
+        allUsers.unshift(mainPerson);
       } else {
-        mainUser = room.speaker;
+        mainUser = mainPerson;
         allUsers.unshift(currentUser);
       }
     } else {
@@ -171,7 +180,7 @@ function Room() {
       side: allUsers.slice(0, count),
       others: allUsers.slice(count, count + 3),
     };
-  }, [room.joinedUsers, room.host, room.speaker, room.presenter, code]);
+  }, [room.joinedUsers, room.host, room.speaker, room.presenter, room.pinnedUser, code]);
 
   const gridLayout = React.useMemo(() => {
     const count = displayedUsers.side.length + +!!displayedUsers.others.length;
@@ -387,7 +396,7 @@ function ChatInput() {
   const sendMessage = React.useCallback(() => {
     if (!inputRef.current) return;
 
-    const message = inputRef.current.value.trim().replace(/\n+/g, '\n\n');
+    const message = inputRef.current.value.trim().replace(/\n{3,}/g, '\n\n');
     if (!message) return;
 
     room.sendChatMessage(user, message);
@@ -416,11 +425,12 @@ function ChatInput() {
         className="flex-1 resize-none"
         placeholder="Type a message"
         onKeyDown={e => {
-          if (e.key === 'Enter' && !e.shiftKey) return;
-          e.preventDefault();
-          e.stopPropagation();
+          if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();
+            e.stopPropagation();
 
-          sendMessage();
+            sendMessage();
+          }
         }}
       />
       <Button className="h-full min-h-10 w-10 p-2" onClick={sendMessage}>
@@ -571,12 +581,48 @@ type ParticipantItemProps = {
 };
 
 function ParticipantItem(props: ParticipantItemProps) {
+  const user = useSession().user!;
   const { room, code } = useMeetingRoom();
 
   const isHost = props.user.roomCode === code;
   const isYou = props.presenceKey === room.presenceKey.current;
 
   const isMuted = room.mutedUsers.includes(props.presenceKey);
+
+  const canShowHostControls = user.roomCode === code && !isYou && !isHost;
+
+  const menuItems = React.useMemo(
+    () =>
+      canShowHostControls && [
+        {
+          label:
+            room.pinnedUser?.presenceKey === props.presenceKey ? 'Unpin the user' : 'Pin this user',
+          icon: room.pinnedUser?.presenceKey === props.presenceKey ? UnpinIcon : PinIcon,
+          onClick: () => {
+            if (room.pinnedUser?.presenceKey === props.presenceKey) {
+              room.setPinnedUser(undefined);
+            } else {
+              room.setPinnedUser({
+                presenceKey: props.presenceKey,
+                info: props.user,
+                stream: null,
+              });
+            }
+          },
+        },
+        {
+          label: `Turn ${isMuted ? 'on' : 'off'} the microphone`,
+          icon: isMuted ? MicOffIcon : MicOnIcon,
+          onClick: () => room.sendMuteCommand(props.presenceKey, !isMuted),
+        },
+        {
+          label: 'Remove from the call',
+          icon: RemoveIcon,
+          onClick: () => room.sendLeaveCommand(props.presenceKey),
+        },
+      ],
+    [isMuted, room.pinnedUser],
+  );
 
   return (
     <div className="flex w-full items-center text-sm">
@@ -616,40 +662,25 @@ function ParticipantItem(props: ParticipantItemProps) {
               <X className="size-5" />
             </Button>
           </>
-        ) : isHost ? null : (
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="rounded-full">
-                <DropDownMenuIcon className="size-5" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem asChild>
-                <button
-                  className="block w-full"
-                  onClick={() => room.sendMuteCommand(props.presenceKey, !isMuted)}
-                >
-                  {isMuted ? (
-                    <>
-                      <MicOnIcon className="mr-2 size-4" /> Turn on the microphone
-                    </>
-                  ) : (
-                    <>
-                      <MicOffIcon className="mr-2 size-4" /> Turn off the micrphone
-                    </>
-                  )}
-                </button>
-              </DropdownMenuItem>
-              <DropdownMenuItem asChild>
-                <button
-                  className="block w-full"
-                  onClick={() => room.sendLeaveCommand(props.presenceKey)}
-                >
-                  <RemoveIcon className="mr-2 size-4" /> Remove from the call
-                </button>
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+        ) : (
+          menuItems && (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon" className="rounded-full">
+                  <DropDownMenuIcon className="size-5" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                {menuItems.map(item => (
+                  <DropdownMenuItem key={item.label} asChild>
+                    <button className="block w-full" onClick={item.onClick}>
+                      <item.icon className="mr-2 size-4" /> {item.label}
+                    </button>
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          )
         )}
       </div>
     </div>

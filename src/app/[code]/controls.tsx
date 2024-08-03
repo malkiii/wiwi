@@ -63,6 +63,7 @@ export function MeiaStateToggle({ kind, className, ...props }: MeiaStateTogglePr
   return (
     <Button
       {...props}
+      title={kind === 'audio' ? 'Toggle microphone' : 'Toggle camera'}
       variant={hasPermission ? (isEnabled ? 'secondary' : 'default') : 'destructive'}
       className={cn('aspect-square size-12 rounded-full p-0', className)}
       disabled={!hasPermission || room.isMuted}
@@ -87,6 +88,7 @@ export function SettingsMenu({ className, ...props }: ButtonProps) {
       <DropdownMenuTrigger asChild>
         <Button
           {...props}
+          title="Additional"
           variant="secondary"
           className={cn('aspect-square size-12 rounded-full p-0', className)}
         >
@@ -119,12 +121,17 @@ export function ChatToggle({ className, onClick, ...props }: ButtonProps) {
   const updateMessagesNumber = () => setReadMessages(room.chatMessages.length);
 
   React.useEffect(() => {
-    if (props.variant === 'default') updateMessagesNumber();
+    if (props.variant === 'default') {
+      updateMessagesNumber();
+    } else {
+      room.notificationSound.current?.play();
+    }
   }, [room.chatMessages.length]);
 
   return (
     <Button
       {...props}
+      title="Chat messages"
       className={cn('relative aspect-square size-12 rounded-full p-0', className)}
       onClick={e => {
         onClick?.(e);
@@ -132,7 +139,7 @@ export function ChatToggle({ className, onClick, ...props }: ButtonProps) {
       }}
     >
       <ChatIcon className="size-6" />
-      {props.variant !== 'default' && readMessages < room.chatMessages.length && <NewContentMark />}
+      {props.variant !== 'default' && readMessages < room.chatMessages.length && <Indicator />}
     </Button>
   );
 }
@@ -141,9 +148,13 @@ export function ParticipantsToggle({ className, ...props }: ButtonProps) {
   const { room } = useMeetingRoom();
 
   return (
-    <Button {...props} className={cn('relative aspect-square size-12 rounded-full p-0', className)}>
+    <Button
+      {...props}
+      title="Participants"
+      className={cn('relative aspect-square size-12 rounded-full p-0', className)}
+    >
       <UsersIcon className="size-6" />
-      {room.waitingUsers.length > 0 && <NewContentMark />}
+      {room.waitingUsers.length > 0 && <Indicator />}
     </Button>
   );
 }
@@ -155,6 +166,7 @@ export function HangUpButton({ className, ...props }: ButtonProps) {
   return (
     <Button
       {...props}
+      title="Hang up"
       variant="destructive"
       className={cn('h-12 rounded-full bg-red-800 py-0', className)}
       onClick={async () => {
@@ -178,6 +190,7 @@ export function ShareScreenButton({ className, ...props }: ButtonProps) {
   return (
     <Button
       {...props}
+      title={isPresenting ? 'Stop screen sharing' : 'Start screen sharing'}
       variant={isPresenting ? 'default' : 'secondary'}
       disabled={!isDesktop || (room.presenter && !isPresenting)}
       className={cn('aspect-square size-12 rounded-full p-0', className)}
@@ -196,7 +209,7 @@ export function ShareScreenButton({ className, ...props }: ButtonProps) {
   );
 }
 
-function NewContentMark() {
+function Indicator() {
   return (
     <span className="absolute right-0 top-0 block aspect-square w-[25%] rounded-full bg-yellow-500"></span>
   );
