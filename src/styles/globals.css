@@ -90,6 +90,10 @@
     scrollbar-color: hsl(var(--foreground) / 0.2) transparent;
     /* scrollbar-gutter: stable; */
   }
+
+  article {
+    @apply prose prose-neutral mx-auto;
+  }
 }
 
 @keyframes wave-edge {
