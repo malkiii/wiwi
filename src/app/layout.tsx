@@ -25,6 +25,7 @@ export const metadata: Metadata = {
   icons: [
     { rel: 'icon', sizes: '32x32', url: '/favicon-32x32.png' },
     { rel: 'icon', sizes: '16x16', url: '/favicon-16x16.png' },
+    { rel: 'apple-touch-icon', sizes: '192x192', url: '/icons/icon-192x192.png' },
   ],
   openGraph: {
     title: site.name,
