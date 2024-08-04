@@ -38,7 +38,6 @@ export const metadata: Metadata = {
   twitter: {
     card: 'summary_large_image',
   },
-  manifest: '/manifest.json',
 };
 
 export default async function RootLayout({ children }: React.PropsWithChildren) {
