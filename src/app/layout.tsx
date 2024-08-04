@@ -3,6 +3,8 @@ import type { Metadata } from 'next';
 import { auth } from '~/server/auth';
 import { Inter as FontSans } from 'next/font/google';
 import { SessionProvider } from '~/components/session-provider';
+import Analytics from './analytics';
+
 import site from '~/constants/site';
 import { env } from '~/env';
 
@@ -35,6 +37,7 @@ export const metadata: Metadata = {
   twitter: {
     card: 'summary_large_image',
   },
+  manifest: '/manifest.json',
 };
 
 export default async function RootLayout({ children }: React.PropsWithChildren) {
@@ -44,6 +47,7 @@ export default async function RootLayout({ children }: React.PropsWithChildren) 
     <html lang="en" suppressHydrationWarning>
       <body className={fontSans.variable}>
         <SessionProvider user={session?.user}>{children}</SessionProvider>
+        <Analytics />
       </body>
     </html>
   );
