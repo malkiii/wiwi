@@ -2,7 +2,7 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { useMediaQuery } from 'react-pre-hooks';
+import { useFullscreen, useMediaQuery } from 'react-pre-hooks';
 import { useSession } from '~/components/session-provider';
 import { useMeetingRoom } from './provider';
 import { MediaStreamVideo } from '~/components/media-stream-video';
@@ -20,8 +20,8 @@ import {
   MicOffIcon,
   MicOnIcon,
   SearchIcon,
-  PinIcon,
-  UnpinIcon,
+  MaximizeIcon,
+  MinimizeIcon,
 } from '~/components/icons';
 import { CheckCheck as DoubleCheckIcon } from 'lucide-react';
 import { UserAvatar } from '~/components/user-avatar';
@@ -137,11 +137,7 @@ function Room() {
   const lastType = React.useRef<typeof sidebarContentType>();
 
   const displayedUsers = React.useMemo(() => {
-    let allUsers = room.joinedUsers.filter(
-      user =>
-        user.presenceKey !== room.speaker?.presenceKey &&
-        user.presenceKey !== room.pinnedUser?.presenceKey,
-    );
+    let allUsers = room.joinedUsers.filter(user => user.presenceKey !== room.speaker?.presenceKey);
 
     const currentUser: MeetingUser = {
       info: userInfo,
@@ -155,18 +151,12 @@ function Room() {
       mainUser = undefined;
       allUsers.unshift(currentUser);
 
-      if (room.pinnedUser) allUsers.unshift(room.pinnedUser);
       if (room.speaker) allUsers.unshift(room.speaker);
-    } else if (room.pinnedUser || room.speaker) {
-      const mainPerson = room.pinnedUser ?? room.speaker!;
+    } else if (room.speaker) {
+      const isSameUser = room.speaker.info.id === currentUser.info.id;
 
-      if (mainPerson.info.id === currentUser.info.id) {
-        mainUser = currentUser;
-        allUsers.unshift(mainPerson);
-      } else {
-        mainUser = mainPerson;
-        allUsers.unshift(currentUser);
-      }
+      mainUser = isSameUser ? currentUser : room.speaker;
+      allUsers.unshift(isSameUser ? room.speaker : currentUser);
     } else {
       mainUser = currentUser;
     }
@@ -180,7 +170,7 @@ function Room() {
       side: allUsers.slice(0, count),
       others: allUsers.slice(count, count + 3),
     };
-  }, [room.joinedUsers, room.host, room.speaker, room.presenter, room.pinnedUser, code]);
+  }, [room.joinedUsers, room.host, room.speaker, room.presenter, code]);
 
   const gridLayout = React.useMemo(() => {
     const count = displayedUsers.side.length + +!!displayedUsers.others.length;
@@ -287,10 +277,10 @@ function Room() {
   );
 }
 
-type ScreenInstantProps = React.ComponentProps<'div'>;
-
-function ScreenInstant({ className, ...props }: ScreenInstantProps) {
+function ScreenInstant({ className, ...props }: React.ComponentPropsWithoutRef<'div'>) {
   const { room } = useMeetingRoom();
+
+  const fullscreen = useFullscreen();
 
   const isPresenting = room.presenter?.key === room.presenceKey.current;
   const presenterFirstName = room.presenter?.info.name.split(' ')[0];
@@ -298,7 +288,8 @@ function ScreenInstant({ className, ...props }: ScreenInstantProps) {
   return (
     <div
       {...props}
-      className={cn('relative flex items-center justify-center rounded-lg bg-muted', className)}
+      ref={fullscreen.ref}
+      className={cn('relative flex items-center justify-center rounded-lg bg-black', className)}
     >
       {room.screenStream ? (
         <MediaStreamVideo
@@ -309,9 +300,23 @@ function ScreenInstant({ className, ...props }: ScreenInstantProps) {
       ) : (
         <LoadingAnimation className="w-20" />
       )}
-      <span className="absolute bottom-0 left-0 z-30 block w-full overflow-hidden text-ellipsis whitespace-nowrap px-2 py-1 text-xs sm:px-3 sm:py-2 sm:text-sm">
-        {presenterFirstName} is presenting.
-      </span>
+      <div className="absolute bottom-0 left-0 z-30 flex w-full items-center justify-between px-2 py-1 sm:px-3 sm:py-2">
+        <div className="min-w-0 flex-grow overflow-hidden text-ellipsis whitespace-nowrap text-xs sm:text-sm">
+          {presenterFirstName} is oiehrgierogi oiheoirh gioehrg oiheoihr goiehro giher
+        </div>
+        {!isPresenting && (
+          <button
+            onClick={() => fullscreen.enter()}
+            className="flex aspect-square w-[10%] max-w-10 items-center justify-center rounded-full p-1 transition-colors hover:bg-foreground/10"
+          >
+            {fullscreen.isEnabled ? (
+              <MinimizeIcon className="w-2/3" />
+            ) : (
+              <MaximizeIcon className="w-2/3" />
+            )}
+          </button>
+        )}
+      </div>
     </div>
   );
 }
@@ -595,22 +600,6 @@ function ParticipantItem(props: ParticipantItemProps) {
     () =>
       canShowHostControls && [
         {
-          label:
-            room.pinnedUser?.presenceKey === props.presenceKey ? 'Unpin the user' : 'Pin this user',
-          icon: room.pinnedUser?.presenceKey === props.presenceKey ? UnpinIcon : PinIcon,
-          onClick: () => {
-            if (room.pinnedUser?.presenceKey === props.presenceKey) {
-              room.setPinnedUser(undefined);
-            } else {
-              room.setPinnedUser({
-                presenceKey: props.presenceKey,
-                info: props.user,
-                stream: null,
-              });
-            }
-          },
-        },
-        {
           label: `Turn ${isMuted ? 'on' : 'off'} the microphone`,
           icon: isMuted ? MicOffIcon : MicOnIcon,
           onClick: () => room.sendMuteCommand(props.presenceKey, !isMuted),
@@ -621,7 +610,7 @@ function ParticipantItem(props: ParticipantItemProps) {
           onClick: () => room.sendLeaveCommand(props.presenceKey),
         },
       ],
-    [isMuted, room.pinnedUser],
+    [isMuted],
   );
 
   return (

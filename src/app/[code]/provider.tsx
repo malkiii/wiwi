@@ -24,6 +24,7 @@ import type {
   PeerMessageData,
   ScreenSharePresenceState,
 } from '~/types';
+import { useSounds } from '~/components/sounds-provider';
 
 type MeetingRoomContextData = {
   code: string;
@@ -139,9 +140,7 @@ function useRoomChannel(
   const rejectedUsersRef = React.useRef<string[]>([]);
 
   // sound effects
-  const joinSound = React.useRef<HTMLAudioElement>();
-  const leaveSound = React.useRef<HTMLAudioElement>();
-  const notificationSound = React.useRef<HTMLAudioElement>();
+  const { playJoinSound, playLeaveSound, playNotificationSound } = useSounds();
 
   const roomHost = React.useMemo(() => {
     const host = joinedUsers.array.find(({ info }) => info.roomCode === code);
@@ -195,7 +194,7 @@ function useRoomChannel(
     screenStream?.getTracks().forEach(t => t.stop());
     presenceKey.current = '';
 
-    leaveSound.current?.play();
+    playLeaveSound();
   }, [stream]);
 
   const hangUp = React.useCallback(async () => {
@@ -265,7 +264,7 @@ function useRoomChannel(
 
         waitingUsers.push({ presenceKey: key, info: presence.user, stream: null });
 
-        notificationSound.current?.play();
+        playNotificationSound();
         toast(`${presence.user.name} wants to join!`, {
           action: {
             label: 'Accept',
@@ -375,7 +374,7 @@ function useRoomChannel(
         connectToScreenChannel();
 
         updateUserState('joined');
-        joinSound.current?.play();
+        playJoinSound();
       },
     );
 
@@ -411,7 +410,7 @@ function useRoomChannel(
 
       const isFull = Object.keys(getPresenceState()).length >= 150;
       if (isFull) {
-        leaveSound.current?.play();
+        playLeaveSound();
         return updateUserState('full');
       }
 
@@ -521,7 +520,7 @@ function useRoomChannel(
         if (isInitiator) return;
 
         if (participantsRef.current.length < 6) {
-          joinSound.current?.play();
+          playJoinSound();
         }
 
         toast(`${presence.user.name} has joined the meeting!`);
@@ -623,6 +622,9 @@ function useRoomChannel(
 
   const stopScreenSharing = React.useCallback(() => {
     screenPeer.current = undefined;
+    setScreenStream(null);
+    setPresenter(undefined);
+
     return screenChannelRef.current?.untrack();
   }, []);
 
@@ -663,14 +665,9 @@ function useRoomChannel(
 
   React.useEffect(() => {
     streamRef.current = stream;
-
-    joinSound.current = new Audio('/assets/sounds/join.wav');
-    leaveSound.current = new Audio('/assets/sounds/leave.wav');
-    notificationSound.current = new Audio('/assets/sounds/notification.wav');
   }, [stream]);
 
   const [speaker, setSpeaker] = React.useState<MeetingUser>();
-  const [pinnedUser, setPinnedUser] = React.useState<MeetingUser>();
 
   return {
     channelRef,
@@ -683,8 +680,6 @@ function useRoomChannel(
     presenter,
     speaker,
     setSpeaker,
-    pinnedUser,
-    setPinnedUser,
     mutedUsers,
     isMuted,
     screenStream,
@@ -698,7 +693,6 @@ function useRoomChannel(
     sendChatMessage,
     sendMuteCommand,
     sendLeaveCommand,
-    notificationSound,
     hangUp,
   };
 }

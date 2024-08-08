@@ -41,12 +41,14 @@ export function sendPasswordChangeEmail(userInfo: User) {
     token => {
       const passwordChangeUrl = new URL(`/password/${token}`, env.AUTH_URL);
 
+      const firstName = userInfo.name.split(' ')[0] ?? '';
+
       transporter.sendMail(
         {
           from: env.GMAIL_USER,
           to: userInfo.email,
           subject: 'Reset your password!',
-          html: passwordChangeTemplate(userInfo.name, userInfo.email, passwordChangeUrl.toString()),
+          html: passwordChangeTemplate(firstName, userInfo.email, passwordChangeUrl.toString()),
         },
         console.error,
       );

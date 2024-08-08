@@ -75,19 +75,21 @@ function NavigationMenuItems() {
 
           const isFeedback = item.name === 'Feedback';
           const Wrapper = isFeedback ? FeedbackModal : React.Fragment;
+          const ButtonContent = isFeedback ? React.Fragment : Link;
 
           return (
             <Wrapper key={index}>
               <Button
                 variant={item.pathname === pathname ? 'ghost-active' : 'ghost-inactive'}
-                asChild
+                className="justify-start text-left"
+                asChild={!isFeedback}
               >
-                <Link href={item.pathname}>
+                <ButtonContent href={item.pathname}>
                   <item.icon className="size-5" />
                   <span className="ml-3 inline-block overflow-hidden whitespace-nowrap transition-[width,margin,opacity] duration-200 group-hover:ml-3 group-hover:w-40 group-hover:opacity-100 sm:ml-0 sm:w-0 sm:opacity-0">
                     {item.name}
                   </span>
-                </Link>
+                </ButtonContent>
               </Button>
             </Wrapper>
           );

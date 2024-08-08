@@ -28,6 +28,7 @@ import {
 } from '~/components/ui/dropdown-menu';
 
 import { InviteButton, FullscreenButton, FeedbackButton, SupportButton } from './settings';
+import { useSounds } from '~/components/sounds-provider';
 
 type MeiaStateToggleProps = ButtonProps & {
   kind: 'audio' | 'video';
@@ -116,6 +117,7 @@ export function SettingsMenu({ className, ...props }: ButtonProps) {
 
 export function ChatToggle({ className, onClick, ...props }: ButtonProps) {
   const { room } = useMeetingRoom();
+  const { playNotificationSound } = useSounds();
   const [readMessages, setReadMessages] = React.useState(room.chatMessages.length);
 
   const updateMessagesNumber = () => setReadMessages(room.chatMessages.length);
@@ -124,7 +126,7 @@ export function ChatToggle({ className, onClick, ...props }: ButtonProps) {
     if (props.variant === 'default') {
       updateMessagesNumber();
     } else {
-      room.notificationSound.current?.play();
+      playNotificationSound();
     }
   }, [room.chatMessages.length]);
 

@@ -35,8 +35,6 @@ export {
   Search as SearchIcon,
   ImagePlus as UploadImageIcon,
   Star as StarIcon,
-  Pin as PinIcon,
-  PinOff as UnpinIcon,
   X,
 } from 'lucide-react';
 

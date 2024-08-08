@@ -3,6 +3,7 @@ import type { Metadata } from 'next';
 import { auth } from '~/server/auth';
 import { Inter as FontSans } from 'next/font/google';
 import { SessionProvider } from '~/components/session-provider';
+import { SoundsProvider } from '~/components/sounds-provider';
 import Analytics from './analytics';
 
 import site from '~/constants/site';
@@ -46,7 +47,9 @@ export default async function RootLayout({ children }: React.PropsWithChildren) 
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={fontSans.variable}>
-        <SessionProvider user={session?.user}>{children}</SessionProvider>
+        <SessionProvider user={session?.user}>
+          <SoundsProvider>{children}</SoundsProvider>
+        </SessionProvider>
         <Analytics />
       </body>
     </html>
