@@ -48,7 +48,7 @@ export function FeedbackModal({ children, onOpenChange, ...props }: FeedbackModa
     >
       <DialogTrigger asChild>{children}</DialogTrigger>
       <DialogContent>
-        <DialogHeader className="max-sm:text-left">
+        <DialogHeader>
           <DialogTitle>Give us feedback</DialogTitle>
         </DialogHeader>
         <div className="grid gap-4">

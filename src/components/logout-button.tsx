@@ -25,7 +25,7 @@ export function LogOutButton(props: ButtonProps) {
         <Component {...props} />
       </DialogTrigger>
       <DialogContent>
-        <DialogHeader className="space-y-4 text-pretty text-left">
+        <DialogHeader className="space-y-4 text-pretty">
           <DialogTitle>Logout from WiWi</DialogTitle>
           <DialogDescription>Are you sure you want to logout from your account?</DialogDescription>
         </DialogHeader>

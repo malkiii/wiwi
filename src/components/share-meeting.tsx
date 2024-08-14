@@ -38,7 +38,7 @@ export function ShareMeeting({ code, description, children, ...props }: ShareMee
     <Dialog {...props} open={children ? undefined : !!code}>
       {children && <DialogTrigger asChild>{children}</DialogTrigger>}
       <DialogContent className="sm:max-w-md">
-        <DialogHeader className="text-left">
+        <DialogHeader>
           <DialogTitle>Share link</DialogTitle>
           <DialogDescription>{description}</DialogDescription>
         </DialogHeader>
@@ -59,6 +59,11 @@ export function ShareMeeting({ code, description, children, ...props }: ShareMee
           </Button>
         </div>
         <DialogFooter className="gap-y-2">
+          <DialogClose asChild>
+            <Button type="button" variant="secondary">
+              Cancel
+            </Button>
+          </DialogClose>
           <Button
             type="button"
             disabled={typeof window === 'undefined' || !navigator.share}
@@ -72,11 +77,6 @@ export function ShareMeeting({ code, description, children, ...props }: ShareMee
           >
             Share
           </Button>
-          <DialogClose asChild>
-            <Button type="button" variant="secondary">
-              Cancel
-            </Button>
-          </DialogClose>
         </DialogFooter>
       </DialogContent>
     </Dialog>

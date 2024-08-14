@@ -4,6 +4,7 @@ import {
   Dialog,
   DialogContent,
   DialogDescription,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
 } from '~/components/ui/dialog';
@@ -40,12 +41,12 @@ export function VerificationModal(props: VerificationModalProps) {
             can&apos;t find the email, just click the button below.
           </DialogDescription>
         </DialogHeader>
-        <div className="flex justify-between gap-2">
-          <Button variant="secondary" className="w-fit" onClick={() => setIsClosed(true)}>
-            Cancel
+        <DialogFooter className="gap-y-2">
+          <Button variant="secondary" onClick={() => setIsClosed(true)}>
+            Close
           </Button>
           <ResendEmailButton {...props} />
-        </div>
+        </DialogFooter>
       </DialogContent>
     </Dialog>
   );

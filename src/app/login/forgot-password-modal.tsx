@@ -11,6 +11,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogDescription,
+  DialogClose,
 } from '~/components/ui/dialog';
 import { Label } from '~/components/ui/label';
 import { Input } from '~/components/ui/input';
@@ -47,7 +48,7 @@ export function ForgotPasswordModal({ children }: ModalProps) {
     <Dialog open={isLoading || undefined}>
       <DialogTrigger asChild>{children}</DialogTrigger>
       <DialogContent>
-        <DialogHeader className="max-sm:text-left">
+        <DialogHeader>
           <DialogTitle>Forgot your password?</DialogTitle>
           <DialogDescription>
             Enter your email address and you will receive a link to reset your password. If you
@@ -66,9 +67,14 @@ export function ForgotPasswordModal({ children }: ModalProps) {
             onChange={clear}
           />
           {error && <p className="text-xs text-destructive">{error.message}</p>}
-          <Button loading={isLoading} onClick={submit}>
-            {hasSent ? 'Resend Email' : 'Send'}
-          </Button>
+          <div className="flex w-full gap-4 *:flex-grow">
+            <DialogClose asChild>
+              <Button variant="secondary">Cancel</Button>
+            </DialogClose>
+            <Button loading={isLoading} onClick={submit}>
+              {hasSent ? 'Resend Email' : 'Send'}
+            </Button>
+          </div>
         </div>
       </DialogContent>
     </Dialog>

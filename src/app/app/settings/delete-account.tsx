@@ -49,7 +49,9 @@ export default function Section() {
           </DialogHeader>
           <DialogFooter>
             <DialogClose asChild>
-              <Button variant="secondary">Cancel</Button>
+              <Button variant="secondary" tabIndex={0}>
+                Cancel
+              </Button>
             </DialogClose>
             <Button variant="destructive" loading={isLoading} onClick={submit}>
               Delete
