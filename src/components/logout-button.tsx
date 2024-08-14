@@ -12,6 +12,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogClose,
+  DialogFooter,
 } from '~/components/ui/dialog';
 
 export function LogOutButton(props: ButtonProps) {
@@ -29,7 +30,7 @@ export function LogOutButton(props: ButtonProps) {
           <DialogTitle>Logout from WiWi</DialogTitle>
           <DialogDescription>Are you sure you want to logout from your account?</DialogDescription>
         </DialogHeader>
-        <div className="flex justify-end gap-2">
+        <DialogFooter className="gap-y-2">
           <DialogClose asChild>
             <Button variant="secondary" disabled={isLoggingOut}>
               Cancel
@@ -44,7 +45,7 @@ export function LogOutButton(props: ButtonProps) {
           >
             Logout
           </Button>
-        </div>
+        </DialogFooter>
       </DialogContent>
     </Dialog>
   );
