@@ -48,7 +48,7 @@ export function SignupForm() {
             control={form.control as any}
             fieldProps={{ placeholder: 'example@gmail.com' }}
           >
-            <Label htmlFor="email">Email</Label>
+            <Label htmlFor="email">Email address</Label>
           </InputField>
           <InputField
             name="password"
