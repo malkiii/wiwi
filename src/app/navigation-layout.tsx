@@ -128,12 +128,12 @@ const menuItems = [
 
 function Footer() {
   return (
-    <footer className="text-balance p-4 text-center text-sm">
+    <footer className="text-balance py-4 text-center text-sm">
       &copy; {new Date().getFullYear()} By{' '}
       <Link href={site.author.url} className="underline">
         {site.author.name}
       </Link>
-      <span className="hidden lg:inline">, All Rights Reserved</span>
+      , All Rights Reserved
     </footer>
   );
 }
