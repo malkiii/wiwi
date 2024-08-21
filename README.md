@@ -18,7 +18,7 @@
 
 2. create `.env` file that has all the required vars in [src/env.js](https://github.com/malkiii/wiwi/blob/main/src/env.js#L4) file.
 
-3. start the development server on [localhost:300](http://localhost:3000):
+3. start the development server on [localhost:3000](http://localhost:3000):
 
    ```sh
    pnpm dev
