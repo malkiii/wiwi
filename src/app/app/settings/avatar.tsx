@@ -110,7 +110,13 @@ function ImageCropper(props: ImageCropperProps) {
         className="relative h-[50dvh] w-full cursor-move touch-none select-none overflow-hidden"
       >
         <div className="pointer-events-none absolute inset-0 m-auto aspect-square w-3/5">
-          <img ref={imageRef} src={props.image} style={cropper.styles.image} alt="Cropped image" />
+          <img
+            ref={imageRef}
+            src={props.image}
+            style={cropper.styles.image}
+            className="absolute max-w-none overflow-visible object-cover object-left-top"
+            alt="Cropped image"
+          />
           <div
             ref={maskRef}
             className="relative size-full overflow-hidden"
@@ -222,12 +228,8 @@ function useImageCropper(
     const isPortrait = height > width;
     return {
       image: {
-        position: 'absolute',
         width: size,
         height: size,
-        objectFit: 'cover',
-        overflow: 'visible',
-        objectPosition: '0 0',
         top: `${-scrollPosition.y}px`,
         left: `${-scrollPosition.x}px`,
       },
