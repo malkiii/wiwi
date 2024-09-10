@@ -404,11 +404,16 @@ function ChatInput() {
     const message = inputRef.current.value.trim().replace(/\n{3,}/g, '\n\n');
     if (!message) return;
 
-    room.sendChatMessage(user, message);
+    // Encode the message to prevent XSS
+    const p = document.createElement('p');
+    p.textContent = message;
+    const endcodedMessage = p.innerHTML;
+
+    room.sendChatMessage(user, endcodedMessage);
     room.chatMessages.push({
       id: room.presenceKey.current,
       user,
-      message,
+      message: endcodedMessage,
       timestamp: Date.now(),
     });
 
