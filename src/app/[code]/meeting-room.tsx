@@ -404,16 +404,11 @@ function ChatInput() {
     const message = inputRef.current.value.trim().replace(/\n{3,}/g, '\n\n');
     if (!message) return;
 
-    // Encode the message to prevent XSS
-    const p = document.createElement('p');
-    p.textContent = message;
-    const endcodedMessage = p.innerHTML;
-
-    room.sendChatMessage(user, endcodedMessage);
+    room.sendChatMessage(user, message);
     room.chatMessages.push({
       id: room.presenceKey.current,
       user,
-      message: endcodedMessage,
+      message,
       timestamp: Date.now(),
     });
 
@@ -456,10 +451,14 @@ function ChatItem(props: ChatMessage & { messageOnly?: boolean }) {
   if (props.messageOnly) {
     return (
       <div className="w-full pl-[43px] text-sm">
-        <div
-          dangerouslySetInnerHTML={{ __html: props.message.replace(/\n/g, '<br />') }}
-          className="mt-1 w-fit max-w-full break-words rounded-lg bg-muted px-3 py-2"
-        />
+        <div className="mt-1 w-fit max-w-full break-words rounded-lg bg-muted px-3 py-2">
+          {props.message.split('\n').map((line, index) => (
+            <React.Fragment key={index}>
+              {index !== 0 && <br />}
+              {line}
+            </React.Fragment>
+          ))}
+        </div>
       </div>
     );
   }
