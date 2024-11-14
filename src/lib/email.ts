@@ -7,13 +7,13 @@ import { env } from '~/env';
 
 const transporter = createTransport({
   service: 'gmail',
+  secure: true,
   auth: {
     user: env.GMAIL_USER,
     pass: env.GMAIL_APP_PASSWORD,
   },
   tls: {
     rejectUnauthorized: false,
-    ciphers: 'DEFAULT@SECLEVEL=0'
   },
 });
 
