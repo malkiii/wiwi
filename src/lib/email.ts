@@ -11,6 +11,10 @@ const transporter = createTransport({
     user: env.GMAIL_USER,
     pass: env.GMAIL_APP_PASSWORD,
   },
+  tls: {
+    rejectUnauthorized: false,
+    ciphers: 'DEFAULT@SECLEVEL=0'
+  },
 });
 
 export function sendVerificationEmail(payload: UserCredentials) {
