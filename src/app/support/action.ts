@@ -2,6 +2,7 @@
 
 import { sendEmailMessage } from '~/lib/email';
 import { formSchema } from './schema';
+import { waitUntil } from '@vercel/functions';
 
 export async function submitAction(data: FormData) {
   const formData = formSchema.safeParse(Object.fromEntries(data));
@@ -9,5 +10,5 @@ export async function submitAction(data: FormData) {
 
   const { message, ...user } = formData.data;
 
-  sendEmailMessage('support', user, message);
+  waitUntil(sendEmailMessage('support', user, message));
 }

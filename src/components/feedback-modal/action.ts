@@ -2,6 +2,7 @@
 
 import { auth } from '~/server/auth';
 import { sendEmailMessage } from '~/lib/email';
+import { waitUntil } from '@vercel/functions';
 
 export async function submitAction(data: FormData) {
   const session = await auth();
@@ -10,5 +11,5 @@ export async function submitAction(data: FormData) {
   const message = data.get('message') as string;
   if (!message) throw new Error('Message is required.');
 
-  sendEmailMessage('feedback', session.user, message);
+  waitUntil(sendEmailMessage('feedback', session.user, message));
 }
