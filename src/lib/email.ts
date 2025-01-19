@@ -1,5 +1,6 @@
 import site from '~/constants/site';
 import { createTransport } from 'nodemailer';
+import type Mail from 'nodemailer/lib/mailer';
 import { type UserCredentials } from '~/lib/validation';
 import { generateToken } from '~/lib/crypto';
 import type { User } from '~/types';
@@ -13,71 +14,66 @@ const transporter = createTransport({
   },
   tls: {
     rejectUnauthorized: false,
-    ciphers: 'DEFAULT@SECLEVEL=0'
+    ciphers: 'DEFAULT@SECLEVEL=0',
   },
 });
 
-export function sendVerificationEmail(payload: UserCredentials) {
-  generateToken(
-    payload,
-    token => {
-      const confirmationUrl = new URL(`/verify/${token}`, env.AUTH_URL);
-
-      transporter.sendMail(
-        {
-          from: env.GMAIL_USER,
-          to: payload.email,
-          subject: 'Verify your email address!',
-          html: verficationTemplate(payload.email, confirmationUrl.toString()),
-        },
-        console.error,
-      );
-    },
-    {
-      expiresIn: '1d',
-    },
-  );
+function sendEmail({ subject, ...options }: Mail.Options) {
+  return new Promise((resolve, reject) => {
+    transporter.sendMail(
+      {
+        from: env.GMAIL_USER,
+        subject: `[WiWi] ${subject}`,
+        ...options,
+      },
+      (err, info) => {
+        if (err) {
+          console.error(err);
+          reject(err);
+        }
+        resolve(info);
+      },
+    );
+  });
 }
 
-export function sendPasswordChangeEmail(userInfo: User) {
-  generateToken(
-    userInfo,
-    token => {
-      const passwordChangeUrl = new URL(`/password/${token}`, env.AUTH_URL);
+export async function sendVerificationEmail(payload: UserCredentials) {
+  const token = await generateToken(payload, { expiresIn: '1d' });
 
-      const firstName = userInfo.name.split(' ')[0] ?? '';
+  const confirmationUrl = new URL(`/verify/${token}`, env.AUTH_URL);
 
-      transporter.sendMail(
-        {
-          from: env.GMAIL_USER,
-          to: userInfo.email,
-          subject: 'Reset your password!',
-          html: passwordChangeTemplate(firstName, userInfo.email, passwordChangeUrl.toString()),
-        },
-        console.error,
-      );
-    },
-    {
-      expiresIn: '1h',
-    },
-  );
+  await sendEmail({
+    to: payload.email,
+    subject: 'Verify your email address!',
+    html: verficationTemplate(payload.email, confirmationUrl.toString()),
+  });
 }
 
-export function sendEmailMessage(
+export async function sendPasswordChangeEmail(userInfo: User) {
+  const token = await generateToken(userInfo, { expiresIn: '1h' });
+
+  const passwordChangeUrl = new URL(`/password/${token}`, env.AUTH_URL);
+
+  const firstName = userInfo.name.split(' ')[0] ?? '';
+
+  await sendEmail({
+    to: userInfo.email,
+    subject: 'Reset your password!',
+    html: passwordChangeTemplate(firstName, userInfo.email, passwordChangeUrl.toString()),
+  });
+}
+
+export async function sendEmailMessage(
   type: 'support' | 'feedback',
   user: Pick<User, 'name' | 'email'>,
   message: string,
 ) {
-  transporter.sendMail(
-    {
-      from: env.GMAIL_USER,
-      to: site.author.email,
-      subject:
-        type === 'support' ? `${user.name} needs support!` : `${user.name} gives you feedback!`,
-      text: `${message}\n\nContact ${user.name} at ${user.email}`,
-    },
-    console.error,
-  );
+  return await sendEmail({
+    to: site.author.email,
+    subject:
+      type === 'support' ? `${user.name} needs support!` : `${user.name} gives you feedback!`,
+    text: `${message}\n\nContact ${user.name} at ${user.email}`,
+  });
 }
 
 const APP_URL = env.AUTH_URL;

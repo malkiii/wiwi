@@ -3,6 +3,7 @@
 import { formSchema } from './schema';
 import { sendVerificationEmail } from '~/lib/email';
 import { getUser } from '~/server/db/user';
+import { waitUntil } from '@vercel/functions';
 
 export async function submitAction(data: FormData) {
   const formData = formSchema.omit({ terms: true }).safeParse(Object.fromEntries(data));
@@ -21,5 +22,5 @@ export async function submitAction(data: FormData) {
     };
   }
 
-  sendVerificationEmail({ name, email, password });
+  waitUntil(sendVerificationEmail({ name, email, password }));
 }
