@@ -302,7 +302,7 @@ function ScreenInstant({ className, ...props }: React.ComponentPropsWithoutRef<'
       )}
       <div className="absolute bottom-0 left-0 z-30 flex w-full items-center justify-between px-2 py-1 sm:px-3 sm:py-2">
         <div className="min-w-0 flex-grow overflow-hidden text-ellipsis whitespace-nowrap text-xs sm:text-sm">
-          {presenterFirstName} is oiehrgierogi oiheoirh gioehrg oiheoihr goiehro giher
+          {presenterFirstName} is presenting
         </div>
         {!isPresenting && (
           <button
