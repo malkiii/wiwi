@@ -5,6 +5,6 @@ export default {
   author: {
     name: 'Malki Abderrahmane',
     url: 'https://malki.me',
-    email: 'malki.abdurrahmane@gmail.com',
+    email: 'message.malki@gmail.com',
   },
 } as const;
